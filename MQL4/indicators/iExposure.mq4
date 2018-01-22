@@ -1,10 +1,11 @@
 //+------------------------------------------------------------------+
 //|                                                    iExposure.mq4 |
-//|                      Copyright © 2007, MetaQuotes Software Corp. |
-//|                                        http://www.metaquotes.net |
+//|                   Copyright 2005-2013, MetaQuotes Software Corp. |
+//|                                              http://www.mql4.com |
 //+------------------------------------------------------------------+
-#property copyright "Copyright © 2007, MetaQuotes Software Corp."
-#property link      "http://www.metaquotes.net"
+#property copyright "2005-2013, MetaQuotes Software Corp."
+#property link      "http://www.mql4.com"
+#property strict
 
 #property indicator_separate_window
 #property indicator_buffers 1
@@ -20,45 +21,39 @@
 #define NET_LOTS       5
 #define PROFIT         6
 
-extern color ExtColor=LightSeaGreen;
+input color InpColor=LightSeaGreen;  // Text color
 
 string ExtName="Exposure";
 string ExtSymbols[SYMBOLS_MAX];
 int    ExtSymbolsTotal=0;
 double ExtSymbolsSummaries[SYMBOLS_MAX][7];
 int    ExtLines=-1;
-string ExtCols[8]=
-  {
-   "Symbol",
-   "Deals",
-   "Buy lots",
-   "Buy price",
-   "Sell lots",
-   "Sell price",
-   "Net lots",
-   "Profit"
-  };
-int    ExtShifts[8]={ 10,80,130,180,260,310,390,460 };
+string ExtCols[8]={"Symbol",
+                   "Deals",
+                   "Buy lots",
+                   "Buy price",
+                   "Sell lots",
+                   "Sell price",
+                   "Net lots",
+                   "Profit"};
+int    ExtShifts[8]={ 10, 80, 130, 180, 260, 310, 390, 460 };
 int    ExtVertShift=14;
 double ExtMapBuffer[];
 //+------------------------------------------------------------------+
 //| Custom indicator initialization function                         |
 //+------------------------------------------------------------------+
-int OnInit(void)
+void OnInit()
   {
-//---
-   IndicatorShortName(ExtName);
+	IndicatorShortName(ExtName);
    SetIndexBuffer(0,ExtMapBuffer);
    SetIndexStyle(0,DRAW_NONE);
    IndicatorDigits(0);
-   SetIndexEmptyValue(0,0.0);
-//--- initialization done
-   return(INIT_SUCCEEDED);
+	SetIndexEmptyValue(0,0.0);
   }
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-void deinit()
+void OnDeinit(const int reason)
   {
    int windex=WindowFind(ExtName);
    if(windex>0)
@@ -67,28 +62,38 @@ void deinit()
 //+------------------------------------------------------------------+
 //| Custom indicator iteration function                              |
 //+------------------------------------------------------------------+
-void start()
+int OnCalculate(const int rates_total,
+                const int prev_calculated,
+                const datetime &time[],
+                const double &open[],
+                const double &high[],
+                const double &low[],
+                const double &close[],
+                const long& tick_volume[],
+                const long& volume[],
+                const int& spread[])
   {
    string name;
    int    i,col,line,windex=WindowFind(ExtName);
-//---
-   if(windex<0) return;
-//--- header line
+//----
+   if(windex<0)
+      return(rates_total);
+//---- header line
    if(ExtLines<0)
      {
       for(col=0; col<8; col++)
         {
-         name="Head_"+IntegerToString(col);
+         name="Head_"+string(col);
          if(ObjectCreate(name,OBJ_LABEL,windex,0,0))
            {
             ObjectSet(name,OBJPROP_XDISTANCE,ExtShifts[col]);
             ObjectSet(name,OBJPROP_YDISTANCE,ExtVertShift);
-            ObjectSetText(name,ExtCols[col],9,"Arial",ExtColor);
+            ObjectSetText(name,ExtCols[col],9,"Arial",InpColor);
            }
         }
       ExtLines=0;
      }
-//---
+//----
    ArrayInitialize(ExtSymbolsSummaries,0.0);
    int total=Analyze();
    if(total>0)
@@ -98,13 +103,13 @@ void start()
         {
          if(ExtSymbolsSummaries[i][DEALS]<=0) continue;
          line++;
-         //--- add line
+         //---- add line
          if(line>ExtLines)
            {
             int y_dist=ExtVertShift*(line+1)+1;
             for(col=0; col<8; col++)
               {
-               name="Line_"+IntegerToString(line)+"_"+IntegerToString(col);
+               name="Line_"+string(line)+"_"+string(col);
                if(ObjectCreate(name,OBJ_LABEL,windex,0,0))
                  {
                   ObjectSet(name,OBJPROP_XDISTANCE,ExtShifts[col]);
@@ -113,58 +118,59 @@ void start()
               }
             ExtLines++;
            }
-         //--- set line
+         //---- set line
          int    digits=(int)MarketInfo(ExtSymbols[i],MODE_DIGITS);
          double buy_lots=ExtSymbolsSummaries[i][BUY_LOTS];
          double sell_lots=ExtSymbolsSummaries[i][SELL_LOTS];
          double buy_price=0.0;
          double sell_price=0.0;
-         if(buy_lots!=0) buy_price=ExtSymbolsSummaries[i][BUY_PRICE]/buy_lots;
+         if(buy_lots!=0)  buy_price=ExtSymbolsSummaries[i][BUY_PRICE]/buy_lots;
          if(sell_lots!=0) sell_price=ExtSymbolsSummaries[i][SELL_PRICE]/sell_lots;
-         name="Line_"+IntegerToString(line)+"_0";
-         ObjectSetText(name,ExtSymbols[i],9,"Arial",ExtColor);
-         name="Line_"+IntegerToString(line)+"_1";
-         ObjectSetText(name,DoubleToStr(ExtSymbolsSummaries[i][DEALS],0),9,"Arial",ExtColor);
-         name="Line_"+IntegerToString(line)+"_2";
-         ObjectSetText(name,DoubleToStr(buy_lots,2),9,"Arial",ExtColor);
-         name="Line_"+IntegerToString(line)+"_3";
-         ObjectSetText(name,DoubleToStr(buy_price,digits),9,"Arial",ExtColor);
-         name="Line_"+IntegerToString(line)+"_4";
-         ObjectSetText(name,DoubleToStr(sell_lots,2),9,"Arial",ExtColor);
-         name="Line_"+IntegerToString(line)+"_5";
-         ObjectSetText(name,DoubleToStr(sell_price,digits),9,"Arial",ExtColor);
-         name="Line_"+IntegerToString(line)+"_6";
-         ObjectSetText(name,DoubleToStr(buy_lots-sell_lots,2),9,"Arial",ExtColor);
-         name="Line_"+IntegerToString(line)+"_7";
-         ObjectSetText(name,DoubleToStr(ExtSymbolsSummaries[i][PROFIT],2),9,"Arial",ExtColor);
+         name="Line_"+string(line)+"_0";
+         ObjectSetText(name,ExtSymbols[i],9,"Arial",InpColor);
+         name="Line_"+string(line)+"_1";
+         ObjectSetText(name,DoubleToStr(ExtSymbolsSummaries[i][DEALS],0),9,"Arial",InpColor);
+         name="Line_"+string(line)+"_2";
+         ObjectSetText(name,DoubleToStr(buy_lots,2),9,"Arial",InpColor);
+         name="Line_"+string(line)+"_3";
+         ObjectSetText(name,DoubleToStr(buy_price,digits),9,"Arial",InpColor);
+         name="Line_"+string(line)+"_4";
+         ObjectSetText(name,DoubleToStr(sell_lots,2),9,"Arial",InpColor);
+         name="Line_"+string(line)+"_5";
+         ObjectSetText(name,DoubleToStr(sell_price,digits),9,"Arial",InpColor);
+         name="Line_"+string(line)+"_6";
+         ObjectSetText(name,DoubleToStr(buy_lots-sell_lots,2),9,"Arial",InpColor);
+         name="Line_"+string(line)+"_7";
+         ObjectSetText(name,DoubleToStr(ExtSymbolsSummaries[i][PROFIT],2),9,"Arial",InpColor);
         }
      }
-//--- remove lines
+//---- remove lines
    if(total<ExtLines)
      {
       for(line=ExtLines; line>total; line--)
         {
-         name="Line_"+IntegerToString(line)+"_0";
+         name="Line_"+string(line)+"_0";
          ObjectSetText(name,"");
-         name="Line_"+IntegerToString(line)+"_1";
+         name="Line_"+string(line)+"_1";
          ObjectSetText(name,"");
-         name="Line_"+IntegerToString(line)+"_2";
+         name="Line_"+string(line)+"_2";
          ObjectSetText(name,"");
-         name="Line_"+IntegerToString(line)+"_3";
+         name="Line_"+string(line)+"_3";
          ObjectSetText(name,"");
-         name="Line_"+IntegerToString(line)+"_4";
+         name="Line_"+string(line)+"_4";
          ObjectSetText(name,"");
-         name="Line_"+IntegerToString(line)+"_5";
+         name="Line_"+string(line)+"_5";
          ObjectSetText(name,"");
-         name="Line_"+IntegerToString(line)+"_6";
+         name="Line_"+string(line)+"_6";
          ObjectSetText(name,"");
-         name="Line_"+IntegerToString(line)+"_7";
+         name="Line_"+string(line)+"_7";
          ObjectSetText(name,"");
         }
      }
-//--- to avoid minimum==maximum
+//---- to avoid minimum==maximum
    ExtMapBuffer[Bars-1]=-1;
-//---
+//----
+   return(rates_total);
   }
 //+------------------------------------------------------------------+
 //|                                                                  |
@@ -173,7 +179,7 @@ int Analyze()
   {
    double profit;
    int    i,index,type,total=OrdersTotal();
-//---
+//----
    for(i=0; i<total; i++)
      {
       if(!OrderSelect(i,SELECT_BY_POS)) continue;
@@ -181,7 +187,7 @@ int Analyze()
       if(type!=OP_BUY && type!=OP_SELL) continue;
       index=SymbolsIndex(OrderSymbol());
       if(index<0 || index>=SYMBOLS_MAX) continue;
-      //---
+      //----
       ExtSymbolsSummaries[index][DEALS]++;
       profit=OrderProfit()+OrderCommission()+OrderSwap();
       ExtSymbolsSummaries[index][PROFIT]+=profit;
@@ -196,13 +202,13 @@ int Analyze()
          ExtSymbolsSummaries[index][SELL_PRICE]+=OrderOpenPrice()*OrderLots();
         }
      }
-//---
+//----
    total=0;
    for(i=0; i<ExtSymbolsTotal; i++)
      {
       if(ExtSymbolsSummaries[i][DEALS]>0) total++;
      }
-//---
+//----
    return(total);
   }
 //+------------------------------------------------------------------+
@@ -211,8 +217,9 @@ int Analyze()
 int SymbolsIndex(string SymbolName)
   {
    bool found=false;
-//---
-   for(int i=0; i<ExtSymbolsTotal; i++)
+   int  i;
+//----
+   for(i=0; i<ExtSymbolsTotal; i++)
      {
       if(SymbolName==ExtSymbols[i])
         {
@@ -220,10 +227,12 @@ int SymbolsIndex(string SymbolName)
          break;
         }
      }
-//---
-   if(found) return(i);
-   if(ExtSymbolsTotal>=SYMBOLS_MAX) return(-1);
-//---
+//----
+   if(found)
+      return(i);
+   if(ExtSymbolsTotal>=SYMBOLS_MAX)
+      return(-1);
+//----
    i=ExtSymbolsTotal;
    ExtSymbolsTotal++;
    ExtSymbols[i]=SymbolName;
@@ -234,7 +243,7 @@ int SymbolsIndex(string SymbolName)
    ExtSymbolsSummaries[i][SELL_PRICE]=0;
    ExtSymbolsSummaries[i][NET_LOTS]=0;
    ExtSymbolsSummaries[i][PROFIT]=0;
-//---
+//----
    return(i);
   }
 //+------------------------------------------------------------------+
