@@ -11,10 +11,12 @@
 #include <MovingAverages.mqh>
 
 #property indicator_separate_window
-#property indicator_buffers 1
-#property indicator_color1 LightSeaGreen
-#property indicator_level1       -100.0
-#property indicator_level2        100.0
+#property indicator_buffers    1
+#property indicator_color1     LightSeaGreen
+#property indicator_level1    -100.0
+#property indicator_level2     100.0
+#property indicator_levelcolor clrSilver
+#property indicator_levelstyle STYLE_DOT
 //--- input parameter
 input int InpCCIPeriod=14; // CCI Period
 //--- buffers

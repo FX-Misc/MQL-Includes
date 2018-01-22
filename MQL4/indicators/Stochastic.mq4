@@ -9,11 +9,15 @@
 #property strict
 
 #property indicator_separate_window
-#property indicator_minimum 0
-#property indicator_maximum 100
-#property indicator_buffers 2
-#property indicator_color1 LightSeaGreen
-#property indicator_color2 Red
+#property indicator_minimum    0
+#property indicator_maximum    100
+#property indicator_buffers    2
+#property indicator_color1     LightSeaGreen
+#property indicator_color2     Red
+#property indicator_level1     20.0
+#property indicator_level2     80.0
+#property indicator_levelcolor clrSilver
+#property indicator_levelstyle STYLE_DOT
 //--- input parameters
 input int InpKPeriod=5; // K Period
 input int InpDPeriod=3; // D Period
