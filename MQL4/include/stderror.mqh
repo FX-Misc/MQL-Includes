@@ -90,6 +90,7 @@
 #define ERR_RESOURCE_NOT_SUPPORTED                 4069   // new MQL4
 #define ERR_RESOURCE_DUPLICATED                    4070   // new MQL4
 #define ERR_INDICATOR_CANNOT_INIT                  4071   // new MQL4
+#define ERR_INDICATOR_CANNOT_LOAD                  4072   // new MQL4
 #define ERR_END_OF_FILE                            4099
 #define ERR_SOME_FILE_ERROR                        4100
 #define ERR_WRONG_FILE_NAME                        4101

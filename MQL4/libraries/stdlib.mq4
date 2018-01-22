@@ -16,8 +16,8 @@ string ErrorDescription(int error_code)
    switch(error_code)
      {
       //--- codes returned from trade server
-      case 0:
-      case 1:   error_string="no error";                                                   break;
+      case 0:   error_string="no error";                                                   break;
+      case 1:   error_string="no error, trade conditions not changed";                     break;
       case 2:   error_string="common error";                                               break;
       case 3:   error_string="invalid trade parameters";                                   break;
       case 4:   error_string="trade server is busy";                                       break;
@@ -101,7 +101,8 @@ string ErrorDescription(int error_code)
       case 4068: error_string="resource not found";                                        break;
       case 4069: error_string="resource not supported";                                    break;
       case 4070: error_string="duplicate resource";                                        break;
-      case 4071: error_string="custom indicator cannot initialize";                        break;
+      case 4071: error_string="cannot initialize custom indicator";                        break;
+      case 4072: error_string="cannot load custom indicator";                              break;
       case 4099: error_string="end of file";                                               break;
       case 4100: error_string="some file error";                                           break;
       case 4101: error_string="wrong file name";                                           break;
