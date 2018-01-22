@@ -80,7 +80,7 @@ bool CLabel::OnShow(void)
 //+------------------------------------------------------------------+
 bool CLabel::OnHide(void)
   {
-   return(m_label.Timeframes(EMPTY));
+   return(m_label.Timeframes(OBJ_NO_PERIODS));
   }
 //+------------------------------------------------------------------+
 //| Absolute movement of the chart object                            |

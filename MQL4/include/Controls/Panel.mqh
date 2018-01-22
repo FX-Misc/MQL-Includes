@@ -95,7 +95,7 @@ bool CPanel::OnShow(void)
 //+------------------------------------------------------------------+
 bool CPanel::OnHide(void)
   {
-   return(m_rectangle.Timeframes(EMPTY));
+   return(m_rectangle.Timeframes(OBJ_NO_PERIODS));
   }
 //+------------------------------------------------------------------+
 //| Absolute movement of the chart object                            |

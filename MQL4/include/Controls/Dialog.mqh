@@ -817,29 +817,22 @@ void CAppDialog::Minimize(void)
   {
 //--- set flag
    m_minimized=true;
-//--- resize
-   Rebound(m_min_rect);
 //--- hide client area
    ClientAreaVisible(false);
+//--- resize
+   Rebound(m_min_rect);
   }
 //+------------------------------------------------------------------+
 //| Restore dialog window                                            |
 //+------------------------------------------------------------------+
 void CAppDialog::Maximize(void)
   {
-//--- check bound
-   if(m_norm_rect.left+m_norm_rect.Width()>m_chart.WidthInPixels() ||
-      m_norm_rect.top+m_norm_rect.Height()>m_chart.HeightInPixels(m_subwin))
-     {
-      m_button_minmax.Pressed(true);
-      return;
-     }
 //--- reset flag
    m_minimized=false;
-//--- resize
-   Rebound(m_norm_rect);
 //--- show client area
    ClientAreaVisible(true);
+//--- resize
+   Rebound(m_norm_rect);
   }
 //+------------------------------------------------------------------+
 //| Create unique prefix for object names                            |

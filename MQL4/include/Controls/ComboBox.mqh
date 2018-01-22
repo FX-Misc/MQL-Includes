@@ -314,7 +314,7 @@ void CComboBox::CheckListHide(const int id,int x,int y)
    if(!m_list.IsVisible())
       return;
 //--- check mouse cursor's position
-///   y-=(int)ChartGetInteger(m_chart_id,CHART_WINDOW_YDISTANCE,m_subwin);
+   y-=(int)ChartGetInteger(m_chart_id,CHART_WINDOW_YDISTANCE,m_subwin);
    if(!m_edit.Contains(x,y) && !m_list.Contains(x,y))
      {
       m_drop.Pressed(false);

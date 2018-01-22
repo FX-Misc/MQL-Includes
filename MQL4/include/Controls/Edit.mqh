@@ -133,7 +133,7 @@ bool CEdit::OnShow(void)
 //+------------------------------------------------------------------+
 bool CEdit::OnHide(void)
   {
-   return(m_edit.Timeframes(EMPTY));
+   return(m_edit.Timeframes(OBJ_NO_PERIODS));
   }
 //+------------------------------------------------------------------+
 //| Absolute movement of the chart object                            |

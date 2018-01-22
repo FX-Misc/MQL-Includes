@@ -637,7 +637,7 @@ bool CWnd::OnDragStart(void)
    if(!IS_CAN_DRAG)
       return(true);
 //--- disable scrolling of chart with mouse
-///   ChartSetInteger(m_chart_id,CHART_MOUSE_SCROLL,false);
+   ChartSetInteger(m_chart_id,CHART_MOUSE_SCROLL,false);
 //--- generate event
    EventChartCustom(INTERNAL_EVENT,ON_DRAG_START,m_id,0.0,m_name);
 //--- handled
@@ -663,7 +663,7 @@ bool CWnd::OnDragEnd(void)
    if(!IS_CAN_DRAG)
       return(true);
 //--- enable scrolling of chart with mouse
-///   ChartSetInteger(m_chart_id,CHART_MOUSE_SCROLL,true);
+   ChartSetInteger(m_chart_id,CHART_MOUSE_SCROLL,true);
 //--- generate event
    EventChartCustom(INTERNAL_EVENT,ON_DRAG_END,m_id,0.0,m_name);
 //--- handled

@@ -104,7 +104,7 @@ bool CPicture::OnShow(void)
 //+------------------------------------------------------------------+
 bool CPicture::OnHide(void)
   {
-   return(m_picture.Timeframes(EMPTY));
+   return(m_picture.Timeframes(OBJ_NO_PERIODS));
   }
 //+------------------------------------------------------------------+
 //| Absolute movement of the chart object                            |

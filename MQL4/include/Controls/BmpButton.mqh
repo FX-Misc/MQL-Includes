@@ -204,7 +204,7 @@ bool CBmpButton::OnShow(void)
 //+------------------------------------------------------------------+
 bool CBmpButton::OnHide(void)
   {
-   return(m_button.Timeframes(EMPTY));
+   return(m_button.Timeframes(OBJ_NO_PERIODS));
   }
 //+------------------------------------------------------------------+
 //| Absolute movement of the chart object                            |
