@@ -109,8 +109,7 @@ CChartObject::CChartObject(void)
 CChartObject::~CChartObject(void)
   {
    if(m_chart_id!=-1)
-///      ObjectDelete(m_chart_id,m_name);
-      ObjectDelete(m_name);
+      ObjectDelete(m_chart_id,m_name);
   }
 //+------------------------------------------------------------------+
 //| Changing name of the object                                      |
@@ -135,8 +134,7 @@ bool CChartObject::Name(const string name)
 bool CChartObject::Attach(long chart_id,const string name,const int window,const int points)
   {
 //--- check
-///   if(ObjectFind(chart_id,name)<0)
-   if(ObjectFind(name)<0)
+   if(ObjectFind(chart_id,name)<0)
       return(false);
 //--- attach
    if(chart_id==0)

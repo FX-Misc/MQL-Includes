@@ -3,25 +3,6 @@
 //|                   Copyright 2009-2013, MetaQuotes Software Corp. |
 //|                                              http://www.mql5.com |
 //+------------------------------------------------------------------+
-//+------------------------------------------------------------------+
-enum ENUM_PROGRAM_TYPE
-  {
-   PROGRAM_SCRIPT,
-   PROGRAM_EXPERT,
-   PROGRAM_INDICATOR
-  };
-//+------------------------------------------------------------------+
-#define REASON_PROGRAM 0
-//#define REASON_REMOVE 1
-//#define REASON_RECOMPILE 2
-//#define REASON_CHARTCHANGE 3
-//#define REASON_CHARTCLOSE 4
-//#define REASON_PARAMETERS 5
-//#define REASON_ACCOUNT 6
-#define REASON_TEMPLATE 7
-#define REASON_INITFAILED 8
-#define REASON_CLOSE 9
-//+------------------------------------------------------------------+
 #include "WndContainer.mqh"
 #include "WndClient.mqh"
 #include "Panel.mqh"
@@ -54,7 +35,7 @@ protected:
    bool              m_panel_flag;          // the "panel in a separate window" flag
    //--- flags
    bool              m_minimized;           // "create in minimized state" flag
-  //--- additional areas
+   //--- additional areas
    CRect             m_min_rect;            // minimal area coordinates
    CRect             m_norm_rect;           // normal area coordinates
 
@@ -543,7 +524,7 @@ bool CAppDialog::CreateCommon(const long chart,const string name,const int subwi
 //--- initialize chart object
    m_chart.Attach(chart);
 //--- determine type of program
-///   m_program_type=(ENUM_PROGRAM_TYPE)MQL5InfoInteger(MQL5_PROGRAM_TYPE);
+   m_program_type=(ENUM_PROGRAM_TYPE)MQLInfoInteger(MQL_PROGRAM_TYPE);
 //--- specify object and mouse events
    if(!m_chart.EventObjectCreate() || !m_chart.EventObjectDelete() || !m_chart.EventMouseMove())
      {
@@ -589,17 +570,16 @@ bool CAppDialog::CreateIndicator(const int x1,const int y1,const int x2,const in
    m_min_rect.Width(width);
    m_min_rect.Height(CONTROLS_DIALOG_MINIMIZE_HEIGHT-2*CONTROLS_BORDER_WIDTH);
 //--- determine subwindow
-///   m_subwin=ChartWindowFind();
-///   if(m_subwin==-1)
-///     {
-///      Print("CAppDialog: find subwindow error");
-///      m_chart.Detach();
-///      return(false);
-///     }
+   m_subwin=ChartWindowFind();
+   if(m_subwin==-1)
+     {
+      Print("CAppDialog: find subwindow error");
+      m_chart.Detach();
+      return(false);
+     }
 //---
-///   int total=ChartIndicatorsTotal(m_chart.ChartId(),m_subwin);
-   int total=1;
-///   m_indicator_name=ChartIndicatorName(m_chart.ChartId(),m_subwin,total-1);
+   int total=ChartIndicatorsTotal(m_chart.ChartId(),m_subwin);
+   m_indicator_name=ChartIndicatorName(m_chart.ChartId(),m_subwin,total-1);
 //--- if subwindow number is 0 (main window), then our program is
 //--- not an indicator panel, but is an indicator with built-in settings dialog
 //--- dialog of such an indicator should behave as an Expert Advisor dialog
@@ -610,34 +590,34 @@ bool CAppDialog::CreateIndicator(const int x1,const int y1,const int x2,const in
    if(total!=1)
      {
       Print("CAppDialog: subwindow busy");
-///      ChartIndicatorDelete(m_chart.ChartId(),m_subwin,ChartIndicatorName(m_chart.ChartId(),m_subwin,total-1));
+      ChartIndicatorDelete(m_chart.ChartId(),m_subwin,ChartIndicatorName(m_chart.ChartId(),m_subwin,total-1));
       m_chart.Detach();
       return(false);
      }
 //--- resize subwindow by dialog height
-///   if(!IndicatorSetInteger(INDICATOR_HEIGHT,(y2-y1)+1))
-///     {
-///      Print("CAppDialog: subwindow resize error");
-///      ChartIndicatorDelete(m_chart.ChartId(),m_subwin,ChartIndicatorName(m_chart.ChartId(),m_subwin,total-1));
-///      m_chart.Detach();
-///      return(false);
-///     }
+   if(!IndicatorSetInteger(INDICATOR_HEIGHT,(y2-y1)+1))
+     {
+      Print("CAppDialog: subwindow resize error");
+      ChartIndicatorDelete(m_chart.ChartId(),m_subwin,ChartIndicatorName(m_chart.ChartId(),m_subwin,total-1));
+      m_chart.Detach();
+      return(false);
+     }
 //--- indicator short name
    m_indicator_name=m_program_name+IntegerToString(m_subwin);
-///   if(!IndicatorSetString(INDICATOR_SHORTNAME,m_indicator_name))
-///     {
-///      Print("CAppDialog: shortname error");
-///      ChartIndicatorDelete(m_chart.ChartId(),m_subwin,ChartIndicatorName(m_chart.ChartId(),m_subwin,total-1));
-///      m_chart.Detach();
-///      return(false);
-///     }
+   if(!IndicatorSetString(INDICATOR_SHORTNAME,m_indicator_name))
+     {
+      Print("CAppDialog: shortname error");
+      ChartIndicatorDelete(m_chart.ChartId(),m_subwin,ChartIndicatorName(m_chart.ChartId(),m_subwin,total-1));
+      m_chart.Detach();
+      return(false);
+     }
 //--- set flag 
    m_panel_flag=true;
 //--- call method of the parent class
    if(!CDialog::Create(m_chart.ChartId(),m_instance_id,m_subwin,0,0,width,y2-y1))
      {
       Print("CAppDialog: indicator dialog create error");
-///      ChartIndicatorDelete(m_chart.ChartId(),m_subwin,ChartIndicatorName(m_chart.ChartId(),m_subwin,total-1));
+      ChartIndicatorDelete(m_chart.ChartId(),m_subwin,ChartIndicatorName(m_chart.ChartId(),m_subwin,total-1));
       m_chart.Detach();
       return(false);
      }
@@ -659,10 +639,10 @@ void CAppDialog::Destroy(const int reason)
 //---
    if(reason==REASON_PROGRAM)
      {
-///      if(m_program_type==PROGRAM_EXPERT)
-///         ExpertRemove();
-///      if(m_program_type==PROGRAM_INDICATOR)
-///         ChartIndicatorDelete(m_chart_id,m_subwin,m_indicator_name);
+      if(m_program_type==PROGRAM_EXPERT)
+         ExpertRemove();
+      if(m_program_type==PROGRAM_INDICATOR)
+         ChartIndicatorDelete(m_chart_id,m_subwin,m_indicator_name);
      }
 //--- send message
    EventChartCustom(m_chart_id,ON_APP_CLOSE,m_subwin,0.0,m_program_name);
@@ -753,11 +733,11 @@ void CAppDialog::ChartEvent(const int id,const long &lparam,const double &dparam
    if(id==CHARTEVENT_CHART_CHANGE)
      {
       //--- if subwindow number is not 0, and dialog subwindow has changed its number, then restart
-///      if(m_subwin!=0 && m_subwin!=ChartWindowFind())
-///        {
-///         long fiction=1;
-///         OnAnotherApplicationClose(fiction,dparam,sparam);
-///        }
+      if(m_subwin!=0 && m_subwin!=ChartWindowFind())
+        {
+         long fiction=1;
+         OnAnotherApplicationClose(fiction,dparam,sparam);
+        }
       //--- if subwindow height is less that dialog height, minimize application window (always)
       if(m_chart.HeightInPixels(m_subwin)<Height()+CONTROLS_BORDER_WIDTH)
         {
@@ -822,11 +802,11 @@ bool CAppDialog::Rebound(const CRect &rect)
    if(!Size(rect.Size()))
       return(false);
 //--- resize subwindow
-///   if(m_program_type==PROGRAM_INDICATOR && !IndicatorSetInteger(INDICATOR_HEIGHT,rect.Height()+1))
-///     {
-///      Print("CAppDialog: subwindow resize error");
-///      return(false);
-///     }
+   if(m_program_type==PROGRAM_INDICATOR && !IndicatorSetInteger(INDICATOR_HEIGHT,rect.Height()+1))
+     {
+      Print("CAppDialog: subwindow resize error");
+      return(false);
+     }
 //--- succeed
    return(true);
   }
@@ -886,10 +866,10 @@ void CAppDialog::OnAnotherApplicationClose(const long &lparam,const double &dpar
       return;
 //--- after all the checks we must change the subwindow
 //--- get the new number of subwindow
-///   m_subwin=ChartWindowFind();
+   m_subwin=ChartWindowFind();
 //--- change short name
    m_indicator_name=m_program_name+IntegerToString(m_subwin);
-///   IndicatorSetString(INDICATOR_SHORTNAME,m_indicator_name);
+   IndicatorSetString(INDICATOR_SHORTNAME,m_indicator_name);
 //--- change dialog title
    Caption(m_program_name);
 //--- reassign IDs
@@ -963,15 +943,12 @@ bool CAppDialog::Load(const int file_handle)
          if(prev_instance_id!=m_instance_id)
            {
             long chart_id=m_chart.ChartId();
-///            int  total=ObjectsTotal(chart_id,m_subwin);
-            int  total=ObjectsTotal();
+            int  total=ObjectsTotal(chart_id,m_subwin);
             for(int i=total-1;i>=0;i--)
               {
-///               string obj_name=ObjectName(chart_id,i,m_subwin);
-               string obj_name=ObjectName(i);
+               string obj_name=ObjectName(chart_id,i,m_subwin);
                if(StringFind(obj_name,prev_instance_id)==0)
-///                  ObjectDelete(chart_id,obj_name);
-                  ObjectDelete(obj_name);
+                  ObjectDelete(chart_id,obj_name);
               }
            }
         }

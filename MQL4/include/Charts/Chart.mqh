@@ -3,29 +3,11 @@
 //|                   Copyright 2009-2013, MetaQuotes Software Corp. |
 //|                                              http://www.mql5.com |
 //+------------------------------------------------------------------+
-//+------------------------------------------------------------------+
-//|                                                                  |
-//+------------------------------------------------------------------+
-enum ENUM_CHART_MODE
-  {
-//   CHART_BARS,
-//   CHART_CANDLES,
-//   CHART_LINE            // пересечение
-  };
-enum ENUM_CHART_VOLUME_MODE
-  {
-   CHART_VOLUME_HIDE,
-   CHART_VOLUME_TICK,
-   CHART_VOLUME_REAL
-  };
-enum ENUM_CHART_POSITION
-  {
-   CHART_BEGIN,
-   CHART_CURRENT_POS,
-   CHART_END
-  };
-//+------------------------------------------------------------------+
 #include <Object.mqh>
+//---
+#ifdef __MQL4__
+int ChartIndicatorAdd(long chart_id,int subwin,int handle) { return(false); }
+#endif
 //+------------------------------------------------------------------+
 //| Class CChart.                                                    |
 //| Purpose: Class of the "Chart" object.                            |
@@ -132,15 +114,32 @@ public:
    int               SubwindowY(const int num) const;
    double            PriceMin(const int num) const;
    double            PriceMax(const int num) const;
-   bool              IsObject(void) const { return(false); }
+   bool              IsObject(void) const;
    //--- methods of binding chart
    void              Attach(void) { m_chart_id=ChartID(); }
    void              Attach(const long chart) { m_chart_id=chart; }
+   void              FirstChart(void) { m_chart_id=ChartFirst(); }
+   void              NextChart(void) { m_chart_id=ChartNext(m_chart_id); }
+   long              Open(const string symbol_name,const ENUM_TIMEFRAMES timeframe);
    void              Detach(void) { m_chart_id=-1;                    }
+   void              Close(void);
+   //--- navigation method
+   bool              Navigate(const ENUM_CHART_POSITION position,const int shift=0) const;
    //--- methods of access to the API functions of MQL5
-   string            Symbol(void) const { return(::Symbol()); }
-   ENUM_TIMEFRAMES   Period(void) const { return((ENUM_TIMEFRAMES)::Period()); }    // ??? совместимость
+   string            Symbol(void) const { return(ChartSymbol(m_chart_id)); }
+   ENUM_TIMEFRAMES   Period(void) const { return(ChartPeriod(m_chart_id)); }
    void              Redraw(void) const { ChartRedraw(m_chart_id); }
+   long              GetInteger(const ENUM_CHART_PROPERTY_INTEGER prop_id,const int sub_window=0) const;
+   bool              GetInteger(const ENUM_CHART_PROPERTY_INTEGER prop_id,const int sub_window,long &value) const;
+   bool              SetInteger(const ENUM_CHART_PROPERTY_INTEGER prop_id,const long value) const;
+   double            GetDouble(const ENUM_CHART_PROPERTY_DOUBLE prop_id,const int sub_window=0) const;
+   bool              GetDouble(const ENUM_CHART_PROPERTY_DOUBLE prop_id,const int sub_window,double &value) const;
+   bool              SetDouble(const ENUM_CHART_PROPERTY_DOUBLE prop_id,const double value) const;
+   string            GetString(const ENUM_CHART_PROPERTY_STRING prop_id) const;
+   bool              GetString(const ENUM_CHART_PROPERTY_STRING prop_id,string &value) const;
+   bool              SetString(const ENUM_CHART_PROPERTY_STRING prop_id,const string value) const;
+   bool              SetSymbolPeriod(const string symbol,const ENUM_TIMEFRAMES period) const;
+   bool              ApplyTemplate(const string filename) const;
    bool              ScreenShot(const string filename,const int width,const int height,
                                 const ENUM_ALIGN_MODE align_mode=ALIGN_RIGHT) const;
    int               WindowOnDropped(void) const;
@@ -148,6 +147,14 @@ public:
    datetime          TimeOnDropped(void) const;
    int               XOnDropped(void) const;
    int               YOnDropped(void) const;
+   //--- methods for working with indicators
+   bool              IndicatorAdd(const int subwin,const int handle) const;
+   bool              IndicatorDelete(const int subwin,const string name) const;
+   int               IndicatorsTotal(const int subwin) const;
+   string            IndicatorName(const int subwin,const int index) const;
+   //--- methods for working with files
+   virtual bool      Save(const int file_handle);
+   virtual bool      Load(const int file_handle);
   };
 //+------------------------------------------------------------------+
 //| Constructor                                                      |
@@ -160,6 +167,15 @@ CChart::CChart(void) : m_chart_id(-1)
 //+------------------------------------------------------------------+
 CChart::~CChart(void)
   {
+   if(m_chart_id!=-1)
+      Close();
+  }
+//+------------------------------------------------------------------+
+//| Opening chart                                                    |
+//+------------------------------------------------------------------+
+long CChart::Open(const string symbol_name,const ENUM_TIMEFRAMES timeframe)
+  {
+   return(m_chart_id=ChartOpen(symbol_name,timeframe));
   }
 //+------------------------------------------------------------------+
 //| Get the type of representation of chart                          |
@@ -170,9 +186,7 @@ ENUM_CHART_MODE CChart::Mode(void) const
    if(m_chart_id==-1)
       return(WRONG_VALUE);
 //--- result
-//   return((ENUM_CHART_MODE)ChartGetInteger(m_chart_id,CHART_MODE));
-//--- temporary
-   return(WRONG_VALUE);
+   return((ENUM_CHART_MODE)ChartGetInteger(m_chart_id,CHART_MODE));
   }
 //+------------------------------------------------------------------+
 //| Set the type of representation chart                             |
@@ -183,9 +197,7 @@ bool CChart::Mode(const ENUM_CHART_MODE mode) const
    if(m_chart_id==-1)
       return(false);
 //--- result
-//   return(ChartSetInteger(m_chart_id,CHART_MODE,mode));
-//--- temporary
-   return(false);
+   return(ChartSetInteger(m_chart_id,CHART_MODE,mode));
   }
 //+------------------------------------------------------------------+
 //| Get value of the "Foreground" property                           |
@@ -196,9 +208,7 @@ bool CChart::Foreground(void) const
    if(m_chart_id==-1)
       return(false);
 //--- result
-//   return(ChartGetInteger(m_chart_id,CHART_FOREGROUND));
-//--- temporary
-   return(false);
+   return(ChartGetInteger(m_chart_id,CHART_FOREGROUND));
   }
 //+------------------------------------------------------------------+
 //| Set value of the "Foreground" property                           |
@@ -209,9 +219,7 @@ bool CChart::Foreground(const bool foreground) const
    if(m_chart_id==-1)
       return(false);
 //--- result
-//   return(ChartSetInteger(m_chart_id,CHART_FOREGROUND,foreground));
-//--- temporary
-   return(false);
+   return(ChartSetInteger(m_chart_id,CHART_FOREGROUND,foreground));
   }
 //+------------------------------------------------------------------+
 //| Get value of the "Shift" property                                |
@@ -222,9 +230,7 @@ bool CChart::Shift(void) const
    if(m_chart_id==-1)
       return(false);
 //--- result
-//   return(ChartGetInteger(m_chart_id,CHART_SHIFT));
-//--- temporary
-   return(false);
+   return(ChartGetInteger(m_chart_id,CHART_SHIFT));
   }
 //+------------------------------------------------------------------+
 //| Set value of the "Shift"property                                 |
@@ -235,9 +241,7 @@ bool CChart::Shift(const bool shift) const
    if(m_chart_id==-1)
       return(false);
 //--- result
-//   return(ChartSetInteger(m_chart_id,CHART_SHIFT,shift));
-//--- temporary
-   return(false);
+   return(ChartSetInteger(m_chart_id,CHART_SHIFT,shift));
   }
 //+------------------------------------------------------------------+
 //| Get value of the "ShiftSize" property                            |
@@ -248,9 +252,7 @@ double CChart::ShiftSize(void) const
    if(m_chart_id==-1)
       return(DBL_MAX);
 //--- result
-//   return(ChartGetDouble(m_chart_id,CHART_SHIFT_SIZE));
-//--- temporary
-   return(EMPTY_VALUE);
+   return(ChartGetDouble(m_chart_id,CHART_SHIFT_SIZE));
   }
 //+------------------------------------------------------------------+
 //| Set value of the "ShiftSize" property                            |
@@ -265,9 +267,7 @@ bool CChart::ShiftSize(double shift) const
    if(shift>50)
       shift=50;
 //--- result
-//   return(ChartSetDouble(m_chart_id,CHART_SHIFT_SIZE,shift));
-//--- temporary
-   return(false);
+   return(ChartSetDouble(m_chart_id,CHART_SHIFT_SIZE,shift));
   }
 //+------------------------------------------------------------------+
 //| Get value of the "AutoScroll" property                           |
@@ -278,9 +278,7 @@ bool CChart::AutoScroll(void) const
    if(m_chart_id==-1)
       return(false);
 //--- result
-//   return(ChartGetInteger(m_chart_id,CHART_AUTOSCROLL));
-//--- temporary
-   return(false);
+   return(ChartGetInteger(m_chart_id,CHART_AUTOSCROLL));
   }
 //+------------------------------------------------------------------+
 //| Set value of the "AutoScroll" property                           |
@@ -291,9 +289,7 @@ bool CChart::AutoScroll(const bool auto_scroll) const
    if(m_chart_id==-1)
       return(false);
 //--- result
-//   return(ChartSetInteger(m_chart_id,CHART_AUTOSCROLL,auto_scroll));
-//--- temporary
-   return(false);
+   return(ChartSetInteger(m_chart_id,CHART_AUTOSCROLL,auto_scroll));
   }
 //+------------------------------------------------------------------+
 //| Get value of the "Scale" property                                |
@@ -304,9 +300,7 @@ int CChart::Scale(void) const
    if(m_chart_id==-1)
       return(0);
 //--- result
-//   return((int)ChartGetInteger(m_chart_id,CHART_SCALE));
-//--- temporary
-   return(0);
+   return((int)ChartGetInteger(m_chart_id,CHART_SCALE));
   }
 //+------------------------------------------------------------------+
 //| Set value of the "Scale" property                                |
@@ -321,9 +315,7 @@ bool CChart::Scale(int shift) const
    if(shift>32)
       shift=32;
 //--- result
-//   return(ChartSetInteger(m_chart_id,CHART_SCALE,shift));
-//--- temporary
-   return(false);
+   return(ChartSetInteger(m_chart_id,CHART_SCALE,shift));
   }
 //+------------------------------------------------------------------+
 //| Get value of the "ScaleFix" property                             |
@@ -334,9 +326,7 @@ bool CChart::ScaleFix(void) const
    if(m_chart_id==-1)
       return(false);
 //--- result
-//   return(ChartGetInteger(m_chart_id,CHART_SCALEFIX));
-//--- temporary
-   return(false);
+   return(ChartGetInteger(m_chart_id,CHART_SCALEFIX));
   }
 //+------------------------------------------------------------------+
 //| Set value of the "ScaleFix" property                             |
@@ -347,9 +337,7 @@ bool CChart::ScaleFix(const bool scale_fix) const
    if(m_chart_id==-1)
       return(false);
 //--- result
-//   return(ChartSetInteger(m_chart_id,CHART_SCALEFIX,scale_fix));
-//--- temporary
-   return(false);
+   return(ChartSetInteger(m_chart_id,CHART_SCALEFIX,scale_fix));
   }
 //+------------------------------------------------------------------+
 //| Get value of the "ScaleFix_11" property                          |
@@ -360,9 +348,7 @@ bool CChart::ScaleFix_11(void) const
    if(m_chart_id==-1)
       return(false);
 //--- result
-//   return(ChartGetInteger(m_chart_id,CHART_SCALEFIX_11));
-//--- temporary
-   return(false);
+   return(ChartGetInteger(m_chart_id,CHART_SCALEFIX_11));
   }
 //+------------------------------------------------------------------+
 //| Set value of the "ScaleFix_11" property                          |
@@ -373,9 +359,7 @@ bool CChart::ScaleFix_11(const bool scale_fix_11) const
    if(m_chart_id==-1)
       return(false);
 //--- result
-//   return(ChartSetInteger(m_chart_id,CHART_SCALEFIX_11,scale_fix_11));
-//--- temporary
-   return(false);
+   return(ChartSetInteger(m_chart_id,CHART_SCALEFIX_11,scale_fix_11));
   }
 //+------------------------------------------------------------------+
 //| Get value of the "FixedMax" property                             |
@@ -386,9 +370,7 @@ double CChart::FixedMax(void) const
    if(m_chart_id==-1)
       return(EMPTY_VALUE);
 //--- result
-//   return(ChartGetDouble(m_chart_id,CHART_FIXED_MAX));
-//--- temporary
-   return(EMPTY_VALUE);
+   return(ChartGetDouble(m_chart_id,CHART_FIXED_MAX));
   }
 //+------------------------------------------------------------------+
 //| Set value of the "FixedMax" property                             |
@@ -399,9 +381,7 @@ bool CChart::FixedMax(const double fixed_max) const
    if(m_chart_id==-1)
       return(false);
 //--- result
-//   return(ChartSetDouble(m_chart_id,CHART_FIXED_MAX,fixed_max));
-//--- temporary
-   return(false);
+   return(ChartSetDouble(m_chart_id,CHART_FIXED_MAX,fixed_max));
   }
 //+------------------------------------------------------------------+
 //| Get value of the "FixedMin" property                             |
@@ -412,9 +392,7 @@ double CChart::FixedMin(void) const
    if(m_chart_id==-1)
       return(EMPTY_VALUE);
 //--- result
-//   return(ChartGetDouble(m_chart_id,CHART_FIXED_MIN));
-//--- temporary
-   return(EMPTY_VALUE);
+   return(ChartGetDouble(m_chart_id,CHART_FIXED_MIN));
   }
 //+------------------------------------------------------------------+
 //| Set value of the "FixedMin" property                             |
@@ -425,9 +403,7 @@ bool CChart::FixedMin(const double fixed_min) const
    if(m_chart_id==-1)
       return(false);
 //--- result
-//   return(ChartSetDouble(m_chart_id,CHART_FIXED_MIN,fixed_min));
-//--- temporary
-   return(false);
+   return(ChartSetDouble(m_chart_id,CHART_FIXED_MIN,fixed_min));
   }
 //+------------------------------------------------------------------+
 //| Get value of the "ScalePointsPerBar" property                    |
@@ -438,9 +414,7 @@ bool CChart::ScalePPB(void) const
    if(m_chart_id==-1)
       return(false);
 //--- result
-//   return(ChartGetInteger(m_chart_id,CHART_SCALE_PT_PER_BAR));
-//--- temporary
-   return(false);
+   return(ChartGetInteger(m_chart_id,CHART_SCALE_PT_PER_BAR));
   }
 //+------------------------------------------------------------------+
 //| Set value of the "ScalePointsPerBar" property                    |
@@ -451,9 +425,7 @@ bool CChart::ScalePPB(const bool scale_ppb) const
    if(m_chart_id==-1)
       return(false);
 //--- result
-//   return(ChartSetInteger(m_chart_id,CHART_SCALE_PT_PER_BAR,scale_ppb));
-//--- temporary
-   return(false);
+   return(ChartSetInteger(m_chart_id,CHART_SCALE_PT_PER_BAR,scale_ppb));
   }
 //+------------------------------------------------------------------+
 //| Get value of the "PointsPerBar" property                         |
@@ -464,9 +436,7 @@ double CChart::PointsPerBar(void) const
    if(m_chart_id==-1)
       return(EMPTY_VALUE);
 //--- result
-//   return(ChartGetDouble(m_chart_id,CHART_POINTS_PER_BAR));
-//--- temporary
-   return(EMPTY_VALUE);
+   return(ChartGetDouble(m_chart_id,CHART_POINTS_PER_BAR));
   }
 //+------------------------------------------------------------------+
 //| Set value of the "PointsPerBar" property                         |
@@ -477,9 +447,7 @@ bool CChart::PointsPerBar(const double points_per_bar) const
    if(m_chart_id==-1)
       return(false);
 //--- result
-//   return(ChartSetDouble(m_chart_id,CHART_POINTS_PER_BAR,points_per_bar));
-//--- temporary
-   return(false);
+   return(ChartSetDouble(m_chart_id,CHART_POINTS_PER_BAR,points_per_bar));
   }
 //+------------------------------------------------------------------+
 //| Get value of the "ShowOHLC" property                             |
@@ -490,9 +458,7 @@ bool CChart::ShowOHLC(void) const
    if(m_chart_id==-1)
       return(false);
 //--- result
-//   return(ChartGetInteger(m_chart_id,CHART_SHOW_OHLC));
-//--- temporary
-   return(false);
+   return(ChartGetInteger(m_chart_id,CHART_SHOW_OHLC));
   }
 //+------------------------------------------------------------------+
 //| Set value of the "ShowOHLC" property                             |
@@ -503,9 +469,7 @@ bool CChart::ShowOHLC(const bool show) const
    if(m_chart_id==-1)
       return(false);
 //--- result
-//   return(ChartSetInteger(m_chart_id,CHART_SHOW_OHLC,show));
-//--- temporary
-   return(false);
+   return(ChartSetInteger(m_chart_id,CHART_SHOW_OHLC,show));
   }
 //+------------------------------------------------------------------+
 //| Get value of the "ShowLineBid" property                          |
@@ -516,9 +480,7 @@ bool CChart::ShowLineBid(void) const
    if(m_chart_id==-1)
       return(false);
 //--- result
-//   return(ChartGetInteger(m_chart_id,CHART_SHOW_BID_LINE));
-//--- temporary
-   return(false);
+   return(ChartGetInteger(m_chart_id,CHART_SHOW_BID_LINE));
   }
 //+------------------------------------------------------------------+
 //| Set value of the "ShowLineBid" property                          |
@@ -529,9 +491,7 @@ bool CChart::ShowLineBid(const bool show) const
    if(m_chart_id==-1)
       return(false);
 //--- result
-//   return(ChartSetInteger(m_chart_id,CHART_SHOW_BID_LINE,show));
-//--- temporary
-   return(false);
+   return(ChartSetInteger(m_chart_id,CHART_SHOW_BID_LINE,show));
   }
 //+------------------------------------------------------------------+
 //| Get value of the "ShowLineAsk" property                          |
@@ -542,9 +502,7 @@ bool CChart::ShowLineAsk(void) const
    if(m_chart_id==-1)
       return(false);
 //--- result
-//   return(ChartGetInteger(m_chart_id,CHART_SHOW_ASK_LINE));
-//--- temporary
-   return(false);
+   return(ChartGetInteger(m_chart_id,CHART_SHOW_ASK_LINE));
   }
 //+------------------------------------------------------------------+
 //| Set value of the "ShowLineAsk" property                          |
@@ -555,9 +513,7 @@ bool CChart::ShowLineAsk(const bool show) const
    if(m_chart_id==-1)
       return(false);
 //--- result
-//   return(ChartSetInteger(m_chart_id,CHART_SHOW_ASK_LINE,show));
-//--- temporary
-   return(false);
+   return(ChartSetInteger(m_chart_id,CHART_SHOW_ASK_LINE,show));
   }
 //+------------------------------------------------------------------+
 //| Get value of the "ShowLastLine" property                         |
@@ -568,9 +524,7 @@ bool CChart::ShowLastLine(void) const
    if(m_chart_id==-1)
       return(false);
 //--- result
-//   return(ChartGetInteger(m_chart_id,CHART_SHOW_LAST_LINE));
-//--- temporary
-   return(false);
+   return(ChartGetInteger(m_chart_id,CHART_SHOW_LAST_LINE));
   }
 //+------------------------------------------------------------------+
 //| Set value of the "ShowLastLine" property                         |
@@ -581,9 +535,7 @@ bool CChart::ShowLastLine(const bool show) const
    if(m_chart_id==-1)
       return(false);
 //--- result
-//   return(ChartSetInteger(m_chart_id,CHART_SHOW_LAST_LINE,show));
-//--- temporary
-   return(false);
+   return(ChartSetInteger(m_chart_id,CHART_SHOW_LAST_LINE,show));
   }
 //+------------------------------------------------------------------+
 //| Get value of the "ShowPeriodSep" property                        |
@@ -594,9 +546,7 @@ bool CChart::ShowPeriodSep(void) const
    if(m_chart_id==-1)
       return(false);
 //--- result
-//   return(ChartGetInteger(m_chart_id,CHART_SHOW_PERIOD_SEP));
-//--- temporary
-   return(false);
+   return(ChartGetInteger(m_chart_id,CHART_SHOW_PERIOD_SEP));
   }
 //+------------------------------------------------------------------+
 //| Set value of the "ShowPeriodSep" property                        |
@@ -607,9 +557,7 @@ bool CChart::ShowPeriodSep(const bool show) const
    if(m_chart_id==-1)
       return(false);
 //--- result
-//   return(ChartSetInteger(m_chart_id,CHART_SHOW_PERIOD_SEP,show));
-//--- temporary
-   return(false);
+   return(ChartSetInteger(m_chart_id,CHART_SHOW_PERIOD_SEP,show));
   }
 //+------------------------------------------------------------------+
 //| Get value of the "ShowGrid" property                             |
@@ -620,9 +568,7 @@ bool CChart::ShowGrid(void) const
    if(m_chart_id==-1)
       return(false);
 //--- result
-//   return(ChartGetInteger(m_chart_id,CHART_SHOW_GRID));
-//--- temporary
-   return(false);
+   return(ChartGetInteger(m_chart_id,CHART_SHOW_GRID));
   }
 //+------------------------------------------------------------------+
 //| Set value of the "ShowGrid" property                             |
@@ -633,9 +579,7 @@ bool CChart::ShowGrid(const bool show) const
    if(m_chart_id==-1)
       return(false);
 //--- result
-//   return(ChartSetInteger(m_chart_id,CHART_SHOW_GRID,show));
-//--- temporary
-   return(false);
+   return(ChartSetInteger(m_chart_id,CHART_SHOW_GRID,show));
   }
 //+------------------------------------------------------------------+
 //| Get value of the "ShowVolumes" property                          |
@@ -646,9 +590,7 @@ ENUM_CHART_VOLUME_MODE CChart::ShowVolumes(void) const
    if(m_chart_id==-1)
       return(WRONG_VALUE);
 //--- result
-//   return((ENUM_CHART_VOLUME_MODE)ChartGetInteger(m_chart_id,CHART_SHOW_VOLUMES));
-//--- temporary
-   return(WRONG_VALUE);
+   return((ENUM_CHART_VOLUME_MODE)ChartGetInteger(m_chart_id,CHART_SHOW_VOLUMES));
   }
 //+------------------------------------------------------------------+
 //| Set value of the "ShowVolumes" property                          |
@@ -659,9 +601,7 @@ bool CChart::ShowVolumes(const ENUM_CHART_VOLUME_MODE show) const
    if(m_chart_id==-1)
       return(false);
 //--- result
-//   return(ChartSetInteger(m_chart_id,CHART_SHOW_VOLUMES,show));
-//--- temporary
-   return(false);
+   return(ChartSetInteger(m_chart_id,CHART_SHOW_VOLUMES,show));
   }
 //+------------------------------------------------------------------+
 //| Get value of the "ShowObjectDescr" property                      |
@@ -672,9 +612,7 @@ bool CChart::ShowObjectDescr(void) const
    if(m_chart_id==-1)
       return(false);
 //--- result
-//   return(ChartGetInteger(m_chart_id,CHART_SHOW_OBJECT_DESCR));
-//--- temporary
-   return(false);
+   return(ChartGetInteger(m_chart_id,CHART_SHOW_OBJECT_DESCR));
   }
 //+------------------------------------------------------------------+
 //| Set value of the "ShowObjectDescr" property                      |
@@ -685,9 +623,7 @@ bool CChart::ShowObjectDescr(const bool show) const
    if(m_chart_id==-1)
       return(false);
 //--- result
-//   return(ChartSetInteger(m_chart_id,CHART_SHOW_OBJECT_DESCR,show));
-//--- temporary
-   return(false);
+   return(ChartSetInteger(m_chart_id,CHART_SHOW_OBJECT_DESCR,show));
   }
 //+------------------------------------------------------------------+
 //| Set value of the "ShowDateScale" property                        |
@@ -698,9 +634,7 @@ bool CChart::ShowDateScale(const bool show) const
    if(m_chart_id==-1)
       return(false);
 //--- result
-//   return(ChartSetInteger(m_chart_id,CHART_SHOW_DATE_SCALE,show));
-//--- temporary
-   return(false);
+   return(ChartSetInteger(m_chart_id,CHART_SHOW_DATE_SCALE,show));
   }
 //+------------------------------------------------------------------+
 //| Set value of the "ShowPriceScale" property                       |
@@ -711,9 +645,7 @@ bool CChart::ShowPriceScale(const bool show) const
    if(m_chart_id==-1)
       return(false);
 //--- result
-//   return(ChartSetInteger(m_chart_id,CHART_SHOW_PRICE_SCALE,show));
-//--- temporary
-   return(false);
+   return(ChartSetInteger(m_chart_id,CHART_SHOW_PRICE_SCALE,show));
   }
 //+------------------------------------------------------------------+
 //| Get color value of the "Background" property                     |
@@ -724,9 +656,7 @@ color CChart::ColorBackground(void) const
    if(m_chart_id==-1)
       return(CLR_NONE);
 //--- result
-//   return((color)ChartGetInteger(m_chart_id,CHART_COLOR_BACKGROUND));
-//--- temporary
-   return(CLR_NONE);
+   return((color)ChartGetInteger(m_chart_id,CHART_COLOR_BACKGROUND));
   }
 //+------------------------------------------------------------------+
 //| Set color value of the "Background" property                     |
@@ -737,9 +667,7 @@ bool CChart::ColorBackground(const color new_color) const
    if(m_chart_id==-1)
       return(false);
 //--- result
-//   return(ChartSetInteger(m_chart_id,CHART_COLOR_BACKGROUND,new_color));
-//--- temporary
-   return(false);
+   return(ChartSetInteger(m_chart_id,CHART_COLOR_BACKGROUND,new_color));
   }
 //+------------------------------------------------------------------+
 //| Get color value of the "Foreground" property                     |
@@ -750,9 +678,7 @@ color CChart::ColorForeground(void) const
    if(m_chart_id==-1)
       return(CLR_NONE);
 //--- result
-//   return((color)ChartGetInteger(m_chart_id,CHART_COLOR_FOREGROUND));
-//--- temporary
-   return(CLR_NONE);
+   return((color)ChartGetInteger(m_chart_id,CHART_COLOR_FOREGROUND));
   }
 //+------------------------------------------------------------------+
 //| Set color value for the "Foreground" property                    |
@@ -763,9 +689,7 @@ bool CChart::ColorForeground(const color new_color) const
    if(m_chart_id==-1)
       return(false);
 //--- result
-//   return(ChartSetInteger(m_chart_id,CHART_COLOR_FOREGROUND,new_color));
-//--- temporary
-   return(false);
+   return(ChartSetInteger(m_chart_id,CHART_COLOR_FOREGROUND,new_color));
   }
 //+------------------------------------------------------------------+
 //| Get color value of the "Grid" property                           |
@@ -776,9 +700,7 @@ color CChart::ColorGrid(void) const
    if(m_chart_id==-1)
       return(CLR_NONE);
 //--- result
-//   return((color)ChartGetInteger(m_chart_id,CHART_COLOR_GRID));
-//--- temporary
-   return(CLR_NONE);
+   return((color)ChartGetInteger(m_chart_id,CHART_COLOR_GRID));
   }
 //+------------------------------------------------------------------+
 //| Set color value for the "Grid" property                          |
@@ -789,9 +711,7 @@ bool CChart::ColorGrid(const color new_color) const
    if(m_chart_id==-1)
       return(false);
 //--- result
-//   return(ChartSetInteger(m_chart_id,CHART_COLOR_GRID,new_color));
-//--- temporary
-   return(false);
+   return(ChartSetInteger(m_chart_id,CHART_COLOR_GRID,new_color));
   }
 //+------------------------------------------------------------------+
 //| Get color value of the "Bar Up" property                         |
@@ -802,9 +722,7 @@ color CChart::ColorBarUp(void) const
    if(m_chart_id==-1)
       return(CLR_NONE);
 //--- result
-//   return((color)ChartGetInteger(m_chart_id,CHART_COLOR_CHART_UP));
-//--- temporary
-   return(CLR_NONE);
+   return((color)ChartGetInteger(m_chart_id,CHART_COLOR_CHART_UP));
   }
 //+------------------------------------------------------------------+
 //| Set color value of the "Bar Up" property                         |
@@ -815,9 +733,7 @@ bool CChart::ColorBarUp(const color new_color) const
    if(m_chart_id==-1)
       return(false);
 //--- result
-//   return(ChartSetInteger(m_chart_id,CHART_COLOR_CHART_UP,new_color));
-//--- temporary
-   return(false);
+   return(ChartSetInteger(m_chart_id,CHART_COLOR_CHART_UP,new_color));
   }
 //+------------------------------------------------------------------+
 //| Get color value of the "Bar Down" property                       |
@@ -828,9 +744,7 @@ color CChart::ColorBarDown(void) const
    if(m_chart_id==-1)
       return(CLR_NONE);
 //--- result
-//   return((color)ChartGetInteger(m_chart_id,CHART_COLOR_CHART_DOWN));
-//--- temporary
-   return(CLR_NONE);
+   return((color)ChartGetInteger(m_chart_id,CHART_COLOR_CHART_DOWN));
   }
 //+------------------------------------------------------------------+
 //| Set color value of the "Bar Down" property                       |
@@ -841,9 +755,7 @@ bool CChart::ColorBarDown(const color new_color) const
    if(m_chart_id==-1)
       return(false);
 //--- result
-//   return(ChartSetInteger(m_chart_id,CHART_COLOR_CHART_DOWN,new_color));
-//--- temporary
-   return(false);
+   return(ChartSetInteger(m_chart_id,CHART_COLOR_CHART_DOWN,new_color));
   }
 //+------------------------------------------------------------------+
 //| Get color value of the "Candle Bull" property                    |
@@ -854,9 +766,7 @@ color CChart::ColorCandleBull(void) const
    if(m_chart_id==-1)
       return(CLR_NONE);
 //--- result
-//   return((color)ChartGetInteger(m_chart_id,CHART_COLOR_CANDLE_BULL));
-//--- temporary
-   return(CLR_NONE);
+   return((color)ChartGetInteger(m_chart_id,CHART_COLOR_CANDLE_BULL));
   }
 //+------------------------------------------------------------------+
 //| Set color value of the "Candle Bull" property                    |
@@ -867,9 +777,7 @@ bool CChart::ColorCandleBull(const color new_color) const
    if(m_chart_id==-1)
       return(false);
 //--- result
-//   return(ChartSetInteger(m_chart_id,CHART_COLOR_CANDLE_BULL,new_color));
-//--- temporary
-   return(false);
+   return(ChartSetInteger(m_chart_id,CHART_COLOR_CANDLE_BULL,new_color));
   }
 //+------------------------------------------------------------------+
 //| Get color value of the "Candle Bear" property                    |
@@ -880,9 +788,7 @@ color CChart::ColorCandleBear(void) const
    if(m_chart_id==-1)
       return(CLR_NONE);
 //--- result
-//   return((color)ChartGetInteger(m_chart_id,CHART_COLOR_CANDLE_BEAR));
-//--- temporary
-   return(CLR_NONE);
+   return((color)ChartGetInteger(m_chart_id,CHART_COLOR_CANDLE_BEAR));
   }
 //+------------------------------------------------------------------+
 //| Set color value of the "Candle Bear" property                    |
@@ -893,9 +799,7 @@ bool CChart::ColorCandleBear(const color new_color) const
    if(m_chart_id==-1)
       return(false);
 //--- result
-//   return(ChartSetInteger(m_chart_id,CHART_COLOR_CANDLE_BEAR,new_color));
-//--- temporary
-   return(false);
+   return(ChartSetInteger(m_chart_id,CHART_COLOR_CANDLE_BEAR,new_color));
   }
 //+------------------------------------------------------------------+
 //| Get color value of the "Chart Line" property                     |
@@ -906,9 +810,7 @@ color CChart::ColorChartLine(void) const
    if(m_chart_id==-1)
       return(CLR_NONE);
 //--- result
-//   return((color)ChartGetInteger(m_chart_id,CHART_COLOR_CHART_LINE));
-//--- temporary
-   return(CLR_NONE);
+   return((color)ChartGetInteger(m_chart_id,CHART_COLOR_CHART_LINE));
   }
 //+------------------------------------------------------------------+
 //| Set color value of the "Chart Line" property                     |
@@ -919,9 +821,7 @@ bool CChart::ColorChartLine(const color new_color) const
    if(m_chart_id==-1)
       return(false);
 //--- result
-//   return(ChartSetInteger(m_chart_id,CHART_COLOR_CHART_LINE,new_color));
-//--- temporary
-   return(false);
+   return(ChartSetInteger(m_chart_id,CHART_COLOR_CHART_LINE,new_color));
   }
 //+------------------------------------------------------------------+
 //| Get color value of the "Volumes" property                        |
@@ -932,9 +832,7 @@ color CChart::ColorVolumes(void) const
    if(m_chart_id==-1)
       return(CLR_NONE);
 //--- result
-//   return((color)ChartGetInteger(m_chart_id,CHART_COLOR_VOLUME));
-//--- temporary
-   return(CLR_NONE);
+   return((color)ChartGetInteger(m_chart_id,CHART_COLOR_VOLUME));
   }
 //+------------------------------------------------------------------+
 //| Set color value of the "Volumes" property                        |
@@ -945,9 +843,7 @@ bool CChart::ColorVolumes(const color new_color) const
    if(m_chart_id==-1)
       return(false);
 //--- result
-//   return(ChartSetInteger(m_chart_id,CHART_COLOR_VOLUME,new_color));
-//--- temporary
-   return(false);
+   return(ChartSetInteger(m_chart_id,CHART_COLOR_VOLUME,new_color));
   }
 //+------------------------------------------------------------------+
 //| Get color value of the "Line Bid" property                       |
@@ -958,9 +854,7 @@ color CChart::ColorLineBid(void) const
    if(m_chart_id==-1)
       return(CLR_NONE);
 //--- result
-//   return((color)ChartGetInteger(m_chart_id,CHART_COLOR_BID));
-//--- temporary
-   return(CLR_NONE);
+   return((color)ChartGetInteger(m_chart_id,CHART_COLOR_BID));
   }
 //+------------------------------------------------------------------+
 //| Set color value of the "Line Bid" property                       |
@@ -971,9 +865,7 @@ bool CChart::ColorLineBid(const color new_color) const
    if(m_chart_id==-1)
       return(false);
 //--- result
-//   return(ChartSetInteger(m_chart_id,CHART_COLOR_BID,new_color));
-//--- temporary
-   return(false);
+   return(ChartSetInteger(m_chart_id,CHART_COLOR_BID,new_color));
   }
 //+------------------------------------------------------------------+
 //| Get color value of the "Line Ask" property                       |
@@ -984,9 +876,7 @@ color CChart::ColorLineAsk(void) const
    if(m_chart_id==-1)
       return(CLR_NONE);
 //--- result
-//   return((color)ChartGetInteger(m_chart_id,CHART_COLOR_ASK));
-//--- temporary
-   return(CLR_NONE);
+   return((color)ChartGetInteger(m_chart_id,CHART_COLOR_ASK));
   }
 //+------------------------------------------------------------------+
 //| Set color value of the "Line Ask" property                       |
@@ -997,9 +887,7 @@ bool CChart::ColorLineAsk(const color new_color) const
    if(m_chart_id==-1)
       return(false);
 //--- result
-//   return(ChartSetInteger(m_chart_id,CHART_COLOR_ASK,new_color));
-//--- temporary
-   return(false);
+   return(ChartSetInteger(m_chart_id,CHART_COLOR_ASK,new_color));
   }
 //+------------------------------------------------------------------+
 //| Get color value of the "Line Last" property                      |
@@ -1010,9 +898,7 @@ color CChart::ColorLineLast(void) const
    if(m_chart_id==-1)
       return(CLR_NONE);
 //--- result
-//   return((color)ChartGetInteger(m_chart_id,CHART_COLOR_LAST));
-//--- temporary
-   return(CLR_NONE);
+   return((color)ChartGetInteger(m_chart_id,CHART_COLOR_LAST));
   }
 //+------------------------------------------------------------------+
 //| Set color value of the "Line Last" property                      |
@@ -1023,9 +909,7 @@ bool CChart::ColorLineLast(const color new_color) const
    if(m_chart_id==-1)
       return(false);
 //--- result
-//   return(ChartSetInteger(m_chart_id,CHART_COLOR_LAST,new_color));
-//--- temporary
-   return(false);
+   return(ChartSetInteger(m_chart_id,CHART_COLOR_LAST,new_color));
   }
 //+------------------------------------------------------------------+
 //| Get color value of the "Stop Levels" property                    |
@@ -1036,9 +920,7 @@ color CChart::ColorStopLevels(void) const
    if(m_chart_id==-1)
       return(CLR_NONE);
 //--- result
-//   return((color)ChartGetInteger(m_chart_id,CHART_COLOR_STOP_LEVEL));
-//--- temporary
-   return(CLR_NONE);
+   return((color)ChartGetInteger(m_chart_id,CHART_COLOR_STOP_LEVEL));
   }
 //+------------------------------------------------------------------+
 //| Set color value of the "Stop Levels" property                    |
@@ -1049,9 +931,7 @@ bool CChart::ColorStopLevels(const color new_color) const
    if(m_chart_id==-1)
       return(false);
 //--- result
-//   return(ChartSetInteger(m_chart_id,CHART_COLOR_STOP_LEVEL,new_color));
-//--- temporary
-   return(false);
+   return(ChartSetInteger(m_chart_id,CHART_COLOR_STOP_LEVEL,new_color));
   }
 //+------------------------------------------------------------------+
 //| Shows chart always on top                                        |
@@ -1062,9 +942,7 @@ bool CChart::BringToTop(void) const
    if(m_chart_id==-1)
       return(false);
 //--- result
-//   return(ChartSetInteger(m_chart_id,CHART_BRING_TO_TOP,true));
-//--- temporary
-   return(false);
+   return(ChartSetInteger(m_chart_id,CHART_BRING_TO_TOP,true));
   }
 //+------------------------------------------------------------------+
 //| Sets flag to generate event of creating objects                  |
@@ -1075,9 +953,7 @@ bool CChart::EventObjectCreate(const bool flag) const
    if(m_chart_id==-1)
       return(false);
 //--- result
-//   return(ChartSetInteger(m_chart_id,CHART_EVENT_OBJECT_CREATE,flag));
-//--- temporary
-   return(false);
+   return(ChartSetInteger(m_chart_id,CHART_EVENT_OBJECT_CREATE,flag));
   }
 //+------------------------------------------------------------------+
 //| Sets flag to generate event of deleting objects                  |
@@ -1088,9 +964,7 @@ bool CChart::EventObjectDelete(const bool flag) const
    if(m_chart_id==-1)
       return(false);
 //--- result
-//   return(ChartSetInteger(m_chart_id,CHART_EVENT_OBJECT_DELETE,flag));
-//--- temporary
-   return(false);
+   return(ChartSetInteger(m_chart_id,CHART_EVENT_OBJECT_DELETE,flag));
   }
 //+------------------------------------------------------------------+
 //| Sets flag to generate event of moving mouse cursor               |
@@ -1101,9 +975,7 @@ bool CChart::EventMouseMove(const bool flag) const
    if(m_chart_id==-1)
       return(false);
 //--- result
-//   return(ChartSetInteger(m_chart_id,CHART_EVENT_MOUSE_MOVE,flag));
-//--- temporary
-   return(false);
+   return(ChartSetInteger(m_chart_id,CHART_EVENT_MOUSE_MOVE,flag));
   }
 //+------------------------------------------------------------------+
 //| Sets flag to mouse scrolling                                     |
@@ -1114,9 +986,7 @@ bool CChart::MouseScroll(const bool flag) const
    if(m_chart_id==-1)
       return(false);
 //--- result
-//   return(ChartSetInteger(m_chart_id,CHART_MOUSE_SCROLL,flag));
-//--- temporary
-   return(false);
+   return(ChartSetInteger(m_chart_id,CHART_MOUSE_SCROLL,flag));
   }
 //+------------------------------------------------------------------+
 //| Get value of the "VisibleBars" property                          |
@@ -1127,8 +997,7 @@ int CChart::VisibleBars(void) const
    if(m_chart_id==-1)
       return(0);
 //--- result
-//   return((int)ChartGetInteger(m_chart_id,CHART_WIDTH_IN_BARS));
-   return(WindowBarsPerChart());
+   return((int)ChartGetInteger(m_chart_id,CHART_WIDTH_IN_BARS));
   }
 //+------------------------------------------------------------------+
 //| Get value of the "WindowsTotal" property                         |
@@ -1139,8 +1008,7 @@ int CChart::WindowsTotal(void) const
    if(m_chart_id==-1)
       return(0);
 //--- result
-//   return((int)ChartGetInteger(m_chart_id,CHART_WINDOWS_TOTAL));
-   return(WindowsTotal());
+   return((int)ChartGetInteger(m_chart_id,CHART_WINDOWS_TOTAL));
   }
 //+------------------------------------------------------------------+
 //| Get value of the "WindowIsVisible" property                      |
@@ -1151,8 +1019,7 @@ bool CChart::WindowIsVisible(const int num) const
    if(m_chart_id==-1)
       return(false);
 //--- result
-//   return(ChartGetInteger(m_chart_id,CHART_WINDOW_IS_VISIBLE,num));
-   return(::WindowIsVisible(num));
+   return(ChartGetInteger(m_chart_id,CHART_WINDOW_IS_VISIBLE,num));
   }
 //+------------------------------------------------------------------+
 //| Get value of the "WindowHandle" property                         |
@@ -1163,8 +1030,7 @@ int CChart::WindowHandle(void) const
    if(m_chart_id==-1)
       return(INVALID_HANDLE);
 //--- result
-//   return((int)ChartGetInteger(m_chart_id,CHART_WINDOW_HANDLE));
-   return(::WindowHandle(Symbol(),Period()));
+   return((int)ChartGetInteger(m_chart_id,CHART_WINDOW_HANDLE));
   }
 //+------------------------------------------------------------------+
 //| Get value of the "FirstVisibleBar" property                      |
@@ -1175,8 +1041,7 @@ int CChart::FirstVisibleBar(void) const
    if(m_chart_id==-1)
       return(-1);
 //--- result
-//   return((int)ChartGetInteger(m_chart_id,CHART_FIRST_VISIBLE_BAR));
-   return(WindowFirstVisibleBar());
+   return((int)ChartGetInteger(m_chart_id,CHART_FIRST_VISIBLE_BAR));
   }
 //+------------------------------------------------------------------+
 //| Get value of the "WidthInBars" property                          |
@@ -1187,8 +1052,7 @@ int CChart::WidthInBars(void) const
    if(m_chart_id==-1)
       return(0);
 //--- result
-//   return((int)ChartGetInteger(m_chart_id,CHART_WIDTH_IN_BARS));
-   return(WindowBarsPerChart());    // ???
+   return((int)ChartGetInteger(m_chart_id,CHART_WIDTH_IN_BARS));
   }
 //+------------------------------------------------------------------+
 //| Get value of the "WidthInPixels" property                        |
@@ -1199,9 +1063,7 @@ int CChart::WidthInPixels(void) const
    if(m_chart_id==-1)
       return(0);
 //--- result
-//   return((int)ChartGetInteger(m_chart_id,CHART_WIDTH_IN_PIXELS));
-//--- temporary
-   return(0);
+   return((int)ChartGetInteger(m_chart_id,CHART_WIDTH_IN_PIXELS));
   }
 //+------------------------------------------------------------------+
 //| Get value of the "HeightInPixels" property                       |
@@ -1212,9 +1074,7 @@ int CChart::HeightInPixels(const int num) const
    if(m_chart_id==-1)
       return(0);
 //--- result
-//   return((int)ChartGetInteger(m_chart_id,CHART_HEIGHT_IN_PIXELS,num));
-//--- temporary
-   return(0);
+   return((int)ChartGetInteger(m_chart_id,CHART_HEIGHT_IN_PIXELS,num));
   }
 //+------------------------------------------------------------------+
 //| Get value of the "WindowYDistance" property                      |
@@ -1225,9 +1085,7 @@ int CChart::SubwindowY(const int num) const
    if(m_chart_id==-1)
       return(0);
 //--- result
-//   return((int)ChartGetInteger(m_chart_id,CHART_WINDOW_YDISTANCE,num));
-//--- temporary
-   return(0);
+   return((int)ChartGetInteger(m_chart_id,CHART_WINDOW_YDISTANCE,num));
   }
 //+------------------------------------------------------------------+
 //| Get value of the "PriceMin" property                             |
@@ -1238,8 +1096,7 @@ double CChart::PriceMin(const int num) const
    if(m_chart_id==-1)
       return(EMPTY_VALUE);
 //--- result
-//   return(ChartGetDouble(m_chart_id,CHART_PRICE_MIN,num));
-   return(WindowPriceMin(num));
+   return(ChartGetDouble(m_chart_id,CHART_PRICE_MIN,num));
   }
 //+------------------------------------------------------------------+
 //| Get value of the "PriceMax" property                             |
@@ -1250,8 +1107,161 @@ double CChart::PriceMax(const int num) const
    if(m_chart_id==-1)
       return(EMPTY_VALUE);
 //--- result
-//   return(ChartGetDouble(m_chart_id,CHART_PRICE_MAX,num));
-   return(WindowPriceMax(num));
+   return(ChartGetDouble(m_chart_id,CHART_PRICE_MAX,num));
+  }
+//+------------------------------------------------------------------+
+//| Get value of the "IsObject" property                             |
+//+------------------------------------------------------------------+
+bool CChart::IsObject(void) const
+  {
+//--- check
+   if(m_chart_id==-1)
+      return(EMPTY_VALUE);
+//--- result
+   return((bool)ChartGetInteger(m_chart_id,CHART_IS_OBJECT));
+  }
+//+------------------------------------------------------------------+
+//| Chart close                                                      |
+//+------------------------------------------------------------------+
+void CChart::Close(void)
+  {
+   if(m_chart_id!=-1)
+     {
+      ChartClose(m_chart_id);
+      m_chart_id=-1;
+     }
+  }
+//+------------------------------------------------------------------+
+//| Chart navigation                                                 |
+//+------------------------------------------------------------------+
+bool CChart::Navigate(const ENUM_CHART_POSITION position,const int shift) const
+  {
+//--- check
+   if(m_chart_id==-1)
+      return(false);
+//--- result
+   return(ChartNavigate(m_chart_id,position,shift));
+  }
+//+------------------------------------------------------------------+
+//| Access functions long ChartGetInteger(...)                       |
+//+------------------------------------------------------------------+
+long CChart::GetInteger(const ENUM_CHART_PROPERTY_INTEGER prop_id,const int subwindow) const
+  {
+//--- check
+   if(m_chart_id==-1)
+      return(0);
+//--- result
+   return(ChartGetInteger(m_chart_id,prop_id,subwindow));
+  }
+//+------------------------------------------------------------------+
+//| Access function bool ChartGetInteger(...)                        |
+//+------------------------------------------------------------------+
+bool CChart::GetInteger(const ENUM_CHART_PROPERTY_INTEGER prop_id,const int subwindow,long &value) const
+  {
+//--- check
+   if(m_chart_id==-1)
+      return(false);
+//--- result
+   return(ChartGetInteger(m_chart_id,prop_id,subwindow,value));
+  }
+//+------------------------------------------------------------------+
+//| Access function  ChartSetInteger(...)                            |
+//+------------------------------------------------------------------+
+bool CChart::SetInteger(const ENUM_CHART_PROPERTY_INTEGER prop_id,const long value) const
+  {
+//--- check
+   if(m_chart_id==-1)
+      return(false);
+//---
+   return(ChartSetInteger(m_chart_id,prop_id,value));
+  }
+//+------------------------------------------------------------------+
+//| Access function double ChartGetDouble(...)                       |
+//+------------------------------------------------------------------+
+double CChart::GetDouble(const ENUM_CHART_PROPERTY_DOUBLE prop_id,const int subwindow) const
+  {
+//--- check
+   if(m_chart_id==-1)
+      return(EMPTY_VALUE);
+//--- result
+   return(ChartGetDouble(m_chart_id,prop_id,subwindow));
+  }
+//+------------------------------------------------------------------+
+//| Access function bool ChartGetDouble(...)                         |
+//+------------------------------------------------------------------+
+bool CChart::GetDouble(const ENUM_CHART_PROPERTY_DOUBLE prop_id,const int subwindow,double &value) const
+  {
+//--- check
+   if(m_chart_id==-1)
+      return(0);
+//--- result
+   return(ChartGetDouble(m_chart_id,prop_id,subwindow,value));
+  }
+//+------------------------------------------------------------------+
+//| Access function ChartSetDouble(...)                              |
+//+------------------------------------------------------------------+
+bool CChart::SetDouble(const ENUM_CHART_PROPERTY_DOUBLE prop_id,const double value) const
+  {
+//--- check
+   if(m_chart_id==-1)
+      return(false);
+//--- result
+   return(ChartSetDouble(m_chart_id,prop_id,value));
+  }
+//+------------------------------------------------------------------+
+//| Access function string ChartGetString(...)                       |
+//+------------------------------------------------------------------+
+string CChart::GetString(const ENUM_CHART_PROPERTY_STRING prop_id) const
+  {
+//--- check
+   if(m_chart_id==-1)
+      return("");
+//--- result
+   return(ChartGetString(m_chart_id,prop_id));
+  }
+//+------------------------------------------------------------------+
+//| Access functions bool ChartGetString(...)                        |
+//+------------------------------------------------------------------+
+bool CChart::GetString(const ENUM_CHART_PROPERTY_STRING prop_id,string &value) const
+  {
+//--- check
+   if(m_chart_id==-1)
+      return(false);
+//--- result
+   return(ChartGetString(m_chart_id,prop_id,value));
+  }
+//+------------------------------------------------------------------+
+//| Access function ChartSetString(...)                              |
+//+------------------------------------------------------------------+
+bool CChart::SetString(const ENUM_CHART_PROPERTY_STRING prop_id,const string value) const
+  {
+//--- check
+   if(m_chart_id==-1)
+      return(false);
+//--- result
+   return(ChartSetString(m_chart_id,prop_id,value));
+  }
+//+------------------------------------------------------------------+
+//| Access function ChartSetSymbolPeriod(...)                        |
+//+------------------------------------------------------------------+
+bool CChart::SetSymbolPeriod(const string symbol,const ENUM_TIMEFRAMES period) const
+  {
+//--- check
+   if(m_chart_id==-1)
+      return(false);
+//--- result
+   return(ChartSetSymbolPeriod(m_chart_id,symbol,period));
+  }
+//+------------------------------------------------------------------+
+//| Access function ChartApplyTemplate(...)                          |
+//+------------------------------------------------------------------+
+bool CChart::ApplyTemplate(const string filename) const
+  {
+//--- check
+   if(m_chart_id==-1)
+      return(false);
+//--- result
+   return(ChartApplyTemplate(m_chart_id,filename));
   }
 //+------------------------------------------------------------------+
 //| Access function ChartScreenShot(...)                             |
@@ -1262,8 +1272,7 @@ bool CChart::ScreenShot(const string filename,const int width,const int height,c
    if(m_chart_id==-1)
       return(false);
 //--- result
-//   return(WindowScreenShot(m_chart_id,filename,width,height,align_mode));
-   return(WindowScreenShot(filename,width,height));
+   return(ChartScreenShot(m_chart_id,filename,width,height,align_mode));
   }
 //+------------------------------------------------------------------+
 //| Access function WindowOnDropped()                                |
@@ -1274,7 +1283,7 @@ int CChart::WindowOnDropped(void) const
    if(m_chart_id==-1)
       return(0);
 //--- result
-   return(::WindowOnDropped());
+   return(ChartWindowOnDropped());
   }
 //+------------------------------------------------------------------+
 //| Access function PriceOnDropped()                                 |
@@ -1285,7 +1294,7 @@ double CChart::PriceOnDropped(void) const
    if(m_chart_id==-1)
       return(EMPTY_VALUE);
 //--- result
-   return(::PriceOnDropped());
+   return(ChartPriceOnDropped());
   }
 //+------------------------------------------------------------------+
 //| Access function TimeOnDropped()                                  |
@@ -1296,7 +1305,7 @@ datetime CChart::TimeOnDropped(void) const
    if(m_chart_id==-1)
       return(false);
 //--- result
-   return(::TimeOnDropped());
+   return(ChartTimeOnDropped());
   }
 //+------------------------------------------------------------------+
 //| Access functions XOnDropped()                                    |
@@ -1307,7 +1316,7 @@ int CChart::XOnDropped(void) const
    if(m_chart_id==-1)
       return(0);
 //--- result
-   return(WindowXOnDropped());
+   return(ChartXOnDropped());
   }
 //+------------------------------------------------------------------+
 //| Access functions YOnDropped()                                    |
@@ -1318,6 +1327,224 @@ int CChart::YOnDropped(void) const
    if(m_chart_id==-1)
       return(0);
 //--- result
-   return(WindowYOnDropped());
+   return(ChartYOnDropped());
+  }
+//+------------------------------------------------------------------+
+//| Adds indicator to chart                                          |
+//+------------------------------------------------------------------+
+bool CChart::IndicatorAdd(const int subwin,const int handle) const
+  {
+//--- check
+   if(m_chart_id==-1)
+      return(false);
+//--- result
+   return(ChartIndicatorAdd(m_chart_id,subwin,handle));
+  }
+//+------------------------------------------------------------------+
+//| Deletes indicator from chart                                     |
+//+------------------------------------------------------------------+
+bool CChart::IndicatorDelete(const int subwin,const string name) const
+  {
+//--- check
+   if(m_chart_id==-1)
+      return(false);
+//--- result
+   return(ChartIndicatorDelete(m_chart_id,subwin,name));
+  }
+//+------------------------------------------------------------------+
+//| Gets number of indicators in chart subwindow                     |
+//+------------------------------------------------------------------+
+int CChart::IndicatorsTotal(const int subwin) const
+  {
+//--- check
+   if(m_chart_id==-1)
+      return(0);
+//--- result
+   return(ChartIndicatorsTotal(m_chart_id,subwin));
+  }
+//+------------------------------------------------------------------+
+//| Gets short name of indicator                                     |
+//+------------------------------------------------------------------+
+string CChart::IndicatorName(const int subwin,const int index) const
+  {
+//--- check
+   if(m_chart_id==-1)
+      return("");
+//--- result
+   return(ChartIndicatorName(m_chart_id,subwin,index));
+  }
+//+------------------------------------------------------------------+
+//| Writing parameters of chart to file                              |
+//+------------------------------------------------------------------+
+bool CChart::Save(const int file_handle)
+  {
+   string work_str;
+   int    work_int;
+//--- check
+   if(file_handle==INVALID_HANDLE || m_chart_id==-1)
+      return(false);
+//--- write start marker - 0xFFFFFFFFFFFFFFFF
+   if(FileWriteLong(file_handle,-1)!=sizeof(long))
+      return(false);
+//--- write chart type
+   if(FileWriteInteger(file_handle,Type(),INT_VALUE)!=INT_VALUE)
+      return(false);
+//--- write chart symbol
+   work_str=Symbol();
+   work_int=StringLen(work_str);
+   if(FileWriteInteger(file_handle,work_int,INT_VALUE)!=INT_VALUE)
+      return(false);
+   if(work_int!=0) if(FileWriteString(file_handle,work_str,work_int)!=work_int)
+      return(false);
+//--- write period of chart
+   if(FileWriteInteger(file_handle,Period(),INT_VALUE)!=sizeof(int))
+      return(false);
+//--- write value of the "Mode" property
+   if(FileWriteInteger(file_handle,(int)ChartGetInteger(m_chart_id,CHART_MODE),INT_VALUE)!=sizeof(int))
+      return(false);
+//--- write value of the "Foreground" property
+   if(FileWriteInteger(file_handle,(int)ChartGetInteger(m_chart_id,CHART_FOREGROUND),CHAR_VALUE)!=sizeof(char))
+      return(false);
+//--- write value of the "Shift" property
+   if(FileWriteInteger(file_handle,(int)ChartGetInteger(m_chart_id,CHART_SHIFT),CHAR_VALUE)!=sizeof(char))
+      return(false);
+//--- write value of the "ShiftSize" property
+   if(FileWriteInteger(file_handle,(int)ChartGetInteger(m_chart_id,CHART_SHIFT),INT_VALUE)!=sizeof(int))
+      return(false);
+//--- write value of the "AutoScroll" property
+   if(FileWriteInteger(file_handle,(int)ChartGetInteger(m_chart_id,CHART_AUTOSCROLL),CHAR_VALUE)!=sizeof(char))
+      return(false);
+//--- write value of the "Scale" property
+   if(FileWriteInteger(file_handle,(int)ChartGetInteger(m_chart_id,CHART_SCALE),INT_VALUE)!=sizeof(int))
+      return(false);
+//--- write value of the "ScaleFix" property
+   if(FileWriteInteger(file_handle,(int)ChartGetInteger(m_chart_id,CHART_SCALEFIX),CHAR_VALUE)!=sizeof(char))
+      return(false);
+//--- write value of the "ScaleFix_11" property
+   if(FileWriteInteger(file_handle,(int)ChartGetInteger(m_chart_id,CHART_SCALEFIX_11),CHAR_VALUE)!=sizeof(char))
+      return(false);
+//--- write value of the "FixedMax" property
+   if(FileWriteDouble(file_handle,ChartGetDouble(m_chart_id,CHART_FIXED_MAX))!=sizeof(double))
+      return(false);
+//--- write value of the "FixedMin" property
+   if(FileWriteDouble(file_handle,ChartGetDouble(m_chart_id,CHART_FIXED_MIN))!=sizeof(double))
+      return(false);
+//--- write the "ScalePPB" property
+   if(FileWriteInteger(file_handle,(int)ChartGetInteger(m_chart_id,CHART_SCALE_PT_PER_BAR),CHAR_VALUE)!=sizeof(char))
+      return(false);
+//--- write value of the "PointsPerBar" property
+   if(FileWriteDouble(file_handle,ChartGetDouble(m_chart_id,CHART_POINTS_PER_BAR))!=sizeof(double))
+      return(false);
+//--- write value of the "ShowOHLC" property
+   if(FileWriteInteger(file_handle,(int)ChartGetInteger(m_chart_id,CHART_SHOW_OHLC),CHAR_VALUE)!=sizeof(char))
+      return(false);
+//--- write value of the "ShowLineBid" property
+   if(FileWriteInteger(file_handle,(int)ChartGetInteger(m_chart_id,CHART_SHOW_BID_LINE),CHAR_VALUE)!=sizeof(char))
+      return(false);
+//--- write value of the "ShowLineAsk" property
+   if(FileWriteInteger(file_handle,(int)ChartGetInteger(m_chart_id,CHART_SHOW_ASK_LINE),CHAR_VALUE)!=sizeof(char))
+      return(false);
+//--- write value of the "ShowLastLine" property
+   if(FileWriteInteger(file_handle,(int)ChartGetInteger(m_chart_id,CHART_SHOW_LAST_LINE),CHAR_VALUE)!=sizeof(char))
+      return(false);
+//--- write value of the "ShowPeriodSep" property
+   if(FileWriteInteger(file_handle,(int)ChartGetInteger(m_chart_id,CHART_SHOW_PERIOD_SEP),CHAR_VALUE)!=sizeof(char))
+      return(false);
+//--- write value of the "ShowGrid" property
+   if(FileWriteInteger(file_handle,(int)ChartGetInteger(m_chart_id,CHART_SHOW_GRID),CHAR_VALUE)!=sizeof(char))
+      return(false);
+//--- write value of the "ShowVolumes" property
+   if(FileWriteInteger(file_handle,(int)ChartGetInteger(m_chart_id,CHART_SHOW_VOLUMES),INT_VALUE)!=sizeof(int))
+      return(false);
+//--- write value of the "ShowObjectDescr" property
+   if(FileWriteInteger(file_handle,(int)ChartGetInteger(m_chart_id,CHART_SHOW_OBJECT_DESCR),CHAR_VALUE)!=sizeof(char))
+      return(false);
+//--- successful
+   return(true);
+  }
+//+------------------------------------------------------------------+
+//| Reading parameters of chart from file                            |
+//+------------------------------------------------------------------+
+bool CChart::Load(const int file_handle)
+  {
+   bool   resutl=true;
+   string work_str;
+   int    work_int;
+//--- check
+   if(file_handle==INVALID_HANDLE || m_chart_id==-1)
+      return(false);
+//--- read and checking start marker - 0xFFFFFFFFFFFFFFFF
+   if(FileReadLong(file_handle)!=-1) return(false);
+//--- read and checking chart type
+   if(FileReadInteger(file_handle,INT_VALUE)!=Type()) return(false);
+//--- read chart symbol
+   work_int=FileReadInteger(file_handle);
+   if(work_int!=0) work_str=FileReadString(file_handle,work_int);
+   else            work_str="";
+//--- read chart period
+   work_int=FileReadInteger(file_handle);
+   SetSymbolPeriod(work_str,(ENUM_TIMEFRAMES)work_int);
+//--- read value of the "Mode" property
+   if(!ChartSetInteger(m_chart_id,CHART_MODE,FileReadInteger(file_handle,INT_VALUE)))
+      return(false);
+//--- read value of the "Foreground" property
+   if(!ChartSetInteger(m_chart_id,CHART_FOREGROUND,FileReadInteger(file_handle,CHAR_VALUE)))
+      return(false);
+//--- read value of the "Shift" property
+   if(!ChartSetInteger(m_chart_id,CHART_SHIFT,FileReadInteger(file_handle,CHAR_VALUE)))
+      return(false);
+//--- read value of the "ShiftSize" property
+   if(!ChartSetInteger(m_chart_id,CHART_SHIFT,FileReadInteger(file_handle,INT_VALUE)))
+      return(false);
+//--- read value of the "AutoScroll" property
+   if(!ChartSetInteger(m_chart_id,CHART_AUTOSCROLL,FileReadInteger(file_handle,CHAR_VALUE)))
+      return(false);
+//--- read value of the "Scale" property
+   if(!ChartSetInteger(m_chart_id,CHART_SCALE,FileReadInteger(file_handle,INT_VALUE)))
+      return(false);
+//--- read value of the "ScaleFix" property
+   if(!ChartSetInteger(m_chart_id,CHART_SCALEFIX,FileReadInteger(file_handle,CHAR_VALUE)))
+      return(false);
+//--- read value of the "ScaleFix_11" property
+   if(!ChartSetInteger(m_chart_id,CHART_SCALEFIX_11,FileReadInteger(file_handle,CHAR_VALUE)))
+      return(false);
+//--- read value of the "FixedMax" property
+   if(!ChartSetDouble(m_chart_id,CHART_FIXED_MAX,FileReadDatetime(file_handle)))
+      return(false);
+//--- read value of the "FixedMin" property
+   if(!ChartSetDouble(m_chart_id,CHART_FIXED_MIN,FileReadDatetime(file_handle)))
+      return(false);
+//--- read value of the "ScalePPB" property
+   if(!ChartSetInteger(m_chart_id,CHART_SCALE_PT_PER_BAR,FileReadInteger(file_handle,CHAR_VALUE)))
+      return(false);
+//--- read value of the "PointsPerBar" property
+   if(!ChartSetDouble(m_chart_id,CHART_POINTS_PER_BAR,FileReadDatetime(file_handle)))
+      return(false);
+//--- read value of the "ShowOHLC" property
+   if(!ChartSetInteger(m_chart_id,CHART_SHOW_OHLC,FileReadInteger(file_handle,CHAR_VALUE)))
+      return(false);
+//--- read value of the "ShowLineBid" property
+   if(!ChartSetInteger(m_chart_id,CHART_SHOW_BID_LINE,FileReadInteger(file_handle,CHAR_VALUE)))
+      return(false);
+//--- read value of the "ShowLineAsk" property
+   if(!ChartSetInteger(m_chart_id,CHART_SHOW_ASK_LINE,FileReadInteger(file_handle,CHAR_VALUE)))
+      return(false);
+//--- read value of the "ShowLastLine" property
+   if(!ChartSetInteger(m_chart_id,CHART_SHOW_LAST_LINE,FileReadInteger(file_handle,CHAR_VALUE)))
+      return(false);
+//--- read value of the "ShowPeriodSep" property
+   if(!ChartSetInteger(m_chart_id,CHART_SHOW_PERIOD_SEP,FileReadInteger(file_handle,CHAR_VALUE)))
+      return(false);
+//--- read value of the "ShowGrid" property
+   if(!ChartSetInteger(m_chart_id,CHART_SHOW_GRID,FileReadInteger(file_handle,CHAR_VALUE)))
+      return(false);
+//--- read value of the "ShowVolumes" property
+   if(!ChartSetInteger(m_chart_id,CHART_SHOW_VOLUMES,FileReadInteger(file_handle,INT_VALUE)))
+      return(false);
+//--- read value of the "ShowObjectDescr" property
+   if(!ChartSetInteger(m_chart_id,CHART_SHOW_OBJECT_DESCR,FileReadInteger(file_handle,CHAR_VALUE)))
+      return(false);
+//--- successful
+   return(resutl);
   }
 //+------------------------------------------------------------------+

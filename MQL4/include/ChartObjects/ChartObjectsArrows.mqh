@@ -153,6 +153,8 @@ public:
    //--- method of creating the object
    bool              Create(long chart_id,const string name,const int window,
                             const datetime time,const double price);
+   //--- method of identifying the object
+   virtual int       Type(void) const { return(OBJ_ARROW_THUMB_UP); }
   };
 //+------------------------------------------------------------------+
 //| Constructor                                                      |
@@ -172,7 +174,12 @@ CChartObjectArrowThumbUp::~CChartObjectArrowThumbUp(void)
 bool CChartObjectArrowThumbUp::Create(long chart_id,const string name,const int window,
                                       const datetime time,const double price)
   {
-   return(CChartObjectArrow::Create(chart_id,name,window,time,price,SYMBOL_THUMBSUP));
+   if(!ObjectCreate(chart_id,name,OBJ_ARROW_THUMB_UP,window,time,price))
+      return(false);
+   if(!Attach(chart_id,name,window,1))
+      return(false);
+//--- successful
+   return(true);
   }
 //+------------------------------------------------------------------+
 //| Class CChartObjectArrowThumbDown.                                |
@@ -189,6 +196,8 @@ public:
    //--- method of creating the object
    bool              Create(long chart_id,const string name,const int window,
                             const datetime time,const double price);
+   //--- method of identifying the object
+   virtual int       Type(void) const { return(OBJ_ARROW_THUMB_DOWN); }
   };
 //+------------------------------------------------------------------+
 //| Constructor                                                      |
@@ -208,7 +217,12 @@ CChartObjectArrowThumbDown::~CChartObjectArrowThumbDown(void)
 bool CChartObjectArrowThumbDown::Create(long chart_id,const string name,const int window,
                                         const datetime time,const double price)
   {
-   return(CChartObjectArrow::Create(chart_id,name,window,time,price,SYMBOL_THUMBSDOWN));
+   if(!ObjectCreate(chart_id,name,OBJ_ARROW_THUMB_DOWN,window,time,price))
+      return(false);
+   if(!Attach(chart_id,name,window,1))
+      return(false);
+//--- successful
+   return(true);
   }
 //+------------------------------------------------------------------+
 //| Class CChartObjectArrowUp.                                       |
@@ -225,6 +239,8 @@ public:
    //--- method of creating the object
    bool              Create(long chart_id,const string name,const int window,
                             const datetime time,const double price);
+   //--- method of identifying the object
+   virtual int       Type(void) const { return(OBJ_ARROW_UP); }
   };
 //+------------------------------------------------------------------+
 //| Constructor                                                      |
@@ -244,7 +260,12 @@ CChartObjectArrowUp::~CChartObjectArrowUp(void)
 bool CChartObjectArrowUp::Create(long chart_id,const string name,const int window,
                                  const datetime time,const double price)
   {
-   return(CChartObjectArrow::Create(chart_id,name,window,time,price,(char)SYMBOL_ARROWUP));
+   if(!ObjectCreate(chart_id,name,OBJ_ARROW_UP,window,time,price))
+      return(false);
+   if(!Attach(chart_id,name,window,1))
+      return(false);
+//--- successful
+   return(true);
   }
 //+------------------------------------------------------------------+
 //| Class CChartObjectArrowDown.                                     |
@@ -261,6 +282,8 @@ public:
    //--- method of creating the object
    bool              Create(long chart_id,const string name,const int window,
                             const datetime time,const double price);
+   //--- method of identifying the object
+   virtual int       Type(void) const { return(OBJ_ARROW_DOWN); }
   };
 //+------------------------------------------------------------------+
 //| Constructor                                                      |
@@ -280,7 +303,12 @@ CChartObjectArrowDown::~CChartObjectArrowDown(void)
 bool CChartObjectArrowDown::Create(long chart_id,const string name,const int window,
                                    const datetime time,const double price)
   {
-   return(CChartObjectArrow::Create(chart_id,name,window,time,price,(char)SYMBOL_ARROWDOWN));
+   if(!ObjectCreate(chart_id,name,OBJ_ARROW_DOWN,window,time,price))
+      return(false);
+   if(!Attach(chart_id,name,window,1))
+      return(false);
+//--- successful
+   return(true);
   }
 //+------------------------------------------------------------------+
 //| Class CChartObjectArrowStop.                                     |
@@ -297,6 +325,8 @@ public:
    //--- method of creating the object
    bool              Create(long chart_id,const string name,const int window,
                             const datetime time,const double price);
+   //--- method of identifying the object
+   virtual int       Type(void) const { return(OBJ_ARROW_STOP); }
   };
 //+------------------------------------------------------------------+
 //| Constructor                                                      |
@@ -316,7 +346,12 @@ CChartObjectArrowStop::~CChartObjectArrowStop(void)
 bool CChartObjectArrowStop::Create(long chart_id,const string name,const int window,
                                    const datetime time,const double price)
   {
-   return(CChartObjectArrow::Create(chart_id,name,window,time,price,(char)SYMBOL_STOPSIGN));
+   if(!ObjectCreate(chart_id,name,OBJ_ARROW_STOP,window,time,price))
+      return(false);
+   if(!Attach(chart_id,name,window,1))
+      return(false);
+//--- successful
+   return(true);
   }
 //+------------------------------------------------------------------+
 //| Class CChartObjectArrowCheck.                                    |
@@ -333,6 +368,8 @@ public:
    //--- method of creating the object
    bool              Create(long chart_id,const string name,const int window,
                             const datetime time,const double price);
+   //--- method of identifying the object
+   virtual int       Type(void) const { return(OBJ_ARROW_CHECK); }
   };
 //+------------------------------------------------------------------+
 //| Constructor                                                      |
@@ -352,7 +389,12 @@ CChartObjectArrowCheck::~CChartObjectArrowCheck(void)
 bool CChartObjectArrowCheck::Create(long chart_id,const string name,const int window,
                                     const datetime time,const double price)
   {
-   return(CChartObjectArrow::Create(chart_id,name,window,time,price,(char)SYMBOL_STOPSIGN));
+   if(!ObjectCreate(chart_id,name,OBJ_ARROW_CHECK,window,time,price))
+      return(false);
+   if(!Attach(chart_id,name,window,1))
+      return(false);
+//--- successful
+   return(true);
   }
 //+------------------------------------------------------------------+
 //| Class CChartObjectArrowLeftPrice.                                |
@@ -370,6 +412,8 @@ public:
    //--- method of creating the object
    bool              Create(long chart_id,const string name,const int window,
                             const datetime time,const double price);
+   //--- method of identifying the object
+   virtual int       Type(void) const { return(OBJ_ARROW_LEFT_PRICE); }
   };
 //+------------------------------------------------------------------+
 //| Constructor                                                      |
@@ -388,7 +432,12 @@ CChartObjectArrowLeftPrice::~CChartObjectArrowLeftPrice(void)
 //+------------------------------------------------------------------+
 bool CChartObjectArrowLeftPrice::Create(long chart_id,const string name,const int window,const datetime time,const double price)
   {
-   return(CChartObjectArrow::Create(chart_id,name,window,time,price,SYMBOL_LEFTPRICE));
+   if(!ObjectCreate(chart_id,name,OBJ_ARROW_LEFT_PRICE,window,time,price))
+      return(false);
+   if(!Attach(chart_id,name,window,1))
+      return(false);
+//--- successful
+   return(true);
   }
 //+------------------------------------------------------------------+
 //| Class CChartObjectArrowRightPrice.                               |
@@ -406,6 +455,8 @@ public:
    //--- method of creating the object
    bool              Create(long chart_id,const string name,const int window,
                             const datetime time,const double price);
+   //--- method of identifying the object
+   virtual int       Type(void) const { return(OBJ_ARROW_RIGHT_PRICE); }
   };
 //+------------------------------------------------------------------+
 //| Constructor                                                      |
@@ -425,6 +476,11 @@ CChartObjectArrowRightPrice::~CChartObjectArrowRightPrice(void)
 bool CChartObjectArrowRightPrice::Create(long chart_id,const string name,const int window,
                                          const datetime time,const double price)
   {
-   return(CChartObjectArrow::Create(chart_id,name,window,time,price,SYMBOL_RIGHTPRICE));
+   if(!ObjectCreate(chart_id,name,OBJ_ARROW_RIGHT_PRICE,window,time,price))
+      return(false);
+   if(!Attach(chart_id,name,window,1))
+      return(false);
+//--- successful
+   return(true);
   }
 //+------------------------------------------------------------------+

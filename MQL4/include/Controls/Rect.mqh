@@ -264,6 +264,7 @@ bool CRect::Contains(const CPoint& point) const
 void CRect::Normalize(void)
   {
    int tmp;
+//---
    if(left>right)
      {
       tmp=left;
@@ -276,5 +277,6 @@ void CRect::Normalize(void)
       top=bottom;
       bottom=tmp;
      }
+//---
   }
 //+------------------------------------------------------------------+

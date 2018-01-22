@@ -114,6 +114,7 @@
 #define ERR_CHART_PROP_INVALID                     4208   // new MQL4
 #define ERR_CHART_NOT_FOUND                        4209   // new MQL4
 #define ERR_CHARTWINDOW_NOT_FOUND                  4210   // new MQL4
+#define ERR_SYMBOL_SELECT                          4211   // new MQL4
 #define ERR_NOTIFICATION_ERROR                     4250
 #define ERR_NOTIFICATION_PARAMETER                 4251
 #define ERR_NOTIFICATION_SETTINGS                  4252
