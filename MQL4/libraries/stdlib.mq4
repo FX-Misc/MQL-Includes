@@ -143,7 +143,7 @@ string ErrorDescription(int error_code)
       case 5011: error_string="file must be opened with FILE_BIN flag";                    break;
       case 5012: error_string="file must be opened with FILE_TXT flag";                    break;
       case 5013: error_string="file must be opened with FILE_TXT or FILE_CSV flag";        break;
-      case 5014: error_string="file must be opened with FILE_TXT flag";                    break;
+      case 5014: error_string="file must be opened with FILE_CSV flag";                    break;
       case 5015: error_string="file read error";                                           break;
       case 5016: error_string="file write error";                                          break;
       case 5017: error_string="string size must be specified for binary file";             break;
