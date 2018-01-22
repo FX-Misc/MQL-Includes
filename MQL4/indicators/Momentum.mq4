@@ -1,18 +1,19 @@
 //+------------------------------------------------------------------+
 //|                                                     Momentum.mq4 |
-//|                      Copyright © 2004, MetaQuotes Software Corp. |
-//|                                       http://www.metaquotes.net/ |
+//|                   Copyright 2005-2013, MetaQuotes Software Corp. |
+//|                                              http://www.mql4.com |
 //+------------------------------------------------------------------+
-#property copyright "Copyright © 2004, MetaQuotes Software Corp."
-#property link      "http://www.metaquotes.net/"
+#property copyright   "2005-2013, MetaQuotes Software Corp."
+#property link        "http://www.mql4.com"
+#property description "Momentum"
 
 #property indicator_separate_window
 #property indicator_buffers 1
 #property indicator_color1 DodgerBlue
-//--- input parameters
-extern int MomPeriod=14;
+//--- input parameter
+input int InpMomPeriod=14;  // Momentum Period
 //--- buffers
-double MomBuffer[];
+double ExtMomBuffer[];
 //+------------------------------------------------------------------+
 //| Custom indicator initialization function                         |
 //+------------------------------------------------------------------+
@@ -21,39 +22,56 @@ int OnInit(void)
    string short_name;
 //--- indicator line
    SetIndexStyle(0,DRAW_LINE);
-   SetIndexBuffer(0,MomBuffer);
+   SetIndexBuffer(0,ExtMomBuffer);
 //--- name for DataWindow and indicator subwindow label
-   short_name="Mom("+IntegerToString(MomPeriod)+")";
+   short_name="Mom("+IntegerToString(InpMomPeriod)+")";
    IndicatorShortName(short_name);
    SetIndexLabel(0,short_name);
+//--- check for input parameter
+   if(InpMomPeriod<=0)
+     {
+      Print("Wrong input parameter Momentum Period=",InpMomPeriod);
+      return(INIT_FAILED);
+     }
 //---
-   SetIndexDrawBegin(0,MomPeriod);
+   SetIndexDrawBegin(0,InpMomPeriod);
 //--- initialization done
    return(INIT_SUCCEEDED);
   }
 //+------------------------------------------------------------------+
 //| Momentum                                                         |
 //+------------------------------------------------------------------+
-int start()
+int OnCalculate(const int rates_total,
+                const int prev_calculated,
+                const datetime &time[],
+                const double &open[],
+                const double &high[],
+                const double &low[],
+                const double &close[],
+                const long &tick_volume[],
+                const long &volume[],
+                const int &spread[])
   {
-   int i,counted_bars=IndicatorCounted();
-//---
-   if(Bars<=MomPeriod)
+   int i,limit;
+//--- check for bars count and input parameter
+   if(rates_total<=InpMomPeriod || InpMomPeriod<=0)
       return(0);
+//--- counting from 0 to rates_total
+   ArraySetAsSeries(ExtMomBuffer,false);
+   ArraySetAsSeries(close,false);
 //--- initial zero
-   if(counted_bars<1)
-      for(i=1;i<=MomPeriod;i++)
-         MomBuffer[Bars-i]=0.0;
-//---
-   i=Bars-MomPeriod-1;
-   if(counted_bars>=MomPeriod)
-      i=Bars-counted_bars-1;
-
-   while(i>=0)
+   if(prev_calculated<=0)
      {
-      MomBuffer[i]=Close[i]*100/Close[i+MomPeriod];
-      i--;
+      for(i=0; i<InpMomPeriod; i++)
+         ExtMomBuffer[i]=0.0;
+      limit=InpMomPeriod;
      }
-   return(0);
+   else
+      limit=prev_calculated-1;
+//--- the main loop of calculations
+   for(i=limit; i<rates_total; i++)
+      ExtMomBuffer[i]=close[i]*100/close[i-InpMomPeriod];
+//--- done
+   return(rates_total);
   }
 //+------------------------------------------------------------------+
