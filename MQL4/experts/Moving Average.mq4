@@ -1,15 +1,19 @@
 //+------------------------------------------------------------------+
 //|                                               Moving Average.mq4 |
-//|                      Copyright © 2005, MetaQuotes Software Corp. |
-//|                                       http://www.metaquotes.net/ |
+//|                   Copyright 2005-2013, MetaQuotes Software Corp. |
+//|                                              http://www.mql4.com |
 //+------------------------------------------------------------------+
-#define MAGICMA  20050610
+#property copyright   "2005-2013, MetaQuotes Software Corp."
+#property link        "http://www.mql4.com"
+#property description "Moving Average sample expert advisor"
 
-extern double Lots               = 0.1;
-extern double MaximumRisk        = 0.02;
-extern double DecreaseFactor     = 3;
-extern int    MovingPeriod       = 12;
-extern int    MovingShift        = 6;
+#define MAGICMA  20131111
+//--- Inputs
+input double Lots          =0.1;
+input double MaximumRisk   =0.02;
+input double DecreaseFactor=3;
+input int    MovingPeriod  =12;
+input int    MovingShift   =6;
 //+------------------------------------------------------------------+
 //| Calculate open positions                                         |
 //+------------------------------------------------------------------+
@@ -119,9 +123,9 @@ void CheckForClose()
 //---
   }
 //+------------------------------------------------------------------+
-//| Start function                                                   |
+//| OnTick function                                                  |
 //+------------------------------------------------------------------+
-void OnStart(void)
+void OnTick()
   {
 //--- check for history and trading
    if(Bars<100 || IsTradeAllowed()==false)

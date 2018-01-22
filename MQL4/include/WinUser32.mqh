@@ -3,8 +3,8 @@
 //|                      Copyright © 2013, MetaQuotes Software Corp. |
 //|                                             http://www.mql4.com/ |
 //+------------------------------------------------------------------+
-#define   copyright "Copyright © 2013, MetaQuotes Software Corp."
-#define   link      "http://www.mql4.com/"
+#property copyright "Copyright © 2013, MetaQuotes Software Corp."
+#property link      "http://www.mql4.com/"
 
 #import "user32.dll"
    //---- messages
