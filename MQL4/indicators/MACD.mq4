@@ -1,10 +1,14 @@
 //+------------------------------------------------------------------+
 //|                                                  Custom MACD.mq4 |
-//|                      Copyright © 2004, MetaQuotes Software Corp. |
-//|                                       http://www.metaquotes.net/ |
+//|                   Copyright 2005-2013, MetaQuotes Software Corp. |
+//|                                              http://www.mql4.com |
 //+------------------------------------------------------------------+
-#property  copyright "Copyright © 2004, MetaQuotes Software Corp."
-#property  link      "http://www.metaquotes.net/"
+#property copyright   "2005-2013, MetaQuotes Software Corp."
+#property link        "http://www.mql4.com"
+#property description "Moving Averages Convergence/Divergence"
+
+#include <MovingAverages.mqh>
+
 //--- indicator settings
 #property  indicator_separate_window
 #property  indicator_buffers 2
@@ -12,50 +16,73 @@
 #property  indicator_color2  Red
 #property  indicator_width1  2
 //--- indicator parameters
-extern int FastEMA=12;
-extern int SlowEMA=26;
-extern int SignalSMA=9;
+input int InpFastEMA=12;   // Fast EMA Period
+input int InpSlowEMA=26;   // Slow EMA Period
+input int InpSignalSMA=9;  // Signal SMA Period
 //--- indicator buffers
-double     MacdBuffer[];
-double     SignalBuffer[];
+double    ExtMacdBuffer[];
+double    ExtSignalBuffer[];
+//--- right input parameters flag
+bool      ExtParameters=false;
 
 //+------------------------------------------------------------------+
 //| Custom indicator initialization function                         |
 //+------------------------------------------------------------------+
 int OnInit(void)
   {
+   IndicatorDigits(Digits+1);
 //--- drawing settings
    SetIndexStyle(0,DRAW_HISTOGRAM);
    SetIndexStyle(1,DRAW_LINE);
-   SetIndexDrawBegin(1,SignalSMA);
-   IndicatorDigits(Digits+1);
+   SetIndexDrawBegin(1,InpSignalSMA);
 //--- indicator buffers mapping
-   SetIndexBuffer(0,MacdBuffer);
-   SetIndexBuffer(1,SignalBuffer);
+   SetIndexBuffer(0,ExtMacdBuffer);
+   SetIndexBuffer(1,ExtSignalBuffer);
 //--- name for DataWindow and indicator subwindow label
-   IndicatorShortName("MACD("+IntegerToString(FastEMA)+","+IntegerToString(SlowEMA)+","+IntegerToString(SignalSMA)+")");
+   IndicatorShortName("MACD("+IntegerToString(InpFastEMA)+","+IntegerToString(InpSlowEMA)+","+IntegerToString(InpSignalSMA)+")");
    SetIndexLabel(0,"MACD");
    SetIndexLabel(1,"Signal");
+//--- check for input parameters
+   if(InpFastEMA<=1 || InpSlowEMA<=1 || InpSignalSMA<=1 || InpFastEMA>=InpSlowEMA)
+     {
+      Print("Wrong input parameters");
+      ExtParameters=false;
+      return(INIT_FAILED);
+     }
+   else
+      ExtParameters=true;
 //--- initialization done
    return(INIT_SUCCEEDED);
   }
 //+------------------------------------------------------------------+
 //| Moving Averages Convergence/Divergence                           |
 //+------------------------------------------------------------------+
-int start()
+int OnCalculate (const int rates_total,
+                 const int prev_calculated,
+                 const datetime& time[],
+                 const double& open[],
+                 const double& high[],
+                 const double& low[],
+                 const double& close[],
+                 const long& tick_volume[],
+                 const long& volume[],
+                 const int& spread[])
   {
-   int limit;
-   int counted_bars=IndicatorCounted();
+   int i,limit;
+//---
+   if(rates_total<=InpSignalSMA || !ExtParameters)
+      return(0);
 //--- last counted bar will be recounted
-   if(counted_bars>0) counted_bars--;
-   limit=Bars-counted_bars;
+   limit=rates_total-prev_calculated;
+   if(prev_calculated>0)
+      limit++;
 //--- macd counted in the 1-st buffer
-   for(int i=0; i<limit; i++)
-      MacdBuffer[i]=iMA(NULL,0,FastEMA,0,MODE_EMA,PRICE_CLOSE,i)-iMA(NULL,0,SlowEMA,0,MODE_EMA,PRICE_CLOSE,i);
-//--- signal line counted in the 2-nd buffer
    for(i=0; i<limit; i++)
-      SignalBuffer[i]=iMAOnArray(MacdBuffer,Bars,SignalSMA,0,MODE_SMA,i);
+      ExtMacdBuffer[i]=iMA(NULL,0,InpFastEMA,0,MODE_EMA,PRICE_CLOSE,i)-
+                    iMA(NULL,0,InpSlowEMA,0,MODE_EMA,PRICE_CLOSE,i);
+//--- signal line counted in the 2-nd buffer
+   SimpleMAOnBuffer(rates_total,prev_calculated,0,InpSignalSMA,ExtMacdBuffer,ExtSignalBuffer);
 //--- done
-   return(0);
+   return(rates_total);
   }
 //+------------------------------------------------------------------+
