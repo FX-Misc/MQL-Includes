@@ -111,10 +111,11 @@
 #define ERR_OBJECT_COORDINATES_ERROR               4205
 #define ERR_NO_SPECIFIED_SUBWINDOW                 4206
 #define ERR_SOME_OBJECT_ERROR                      4207
-#define ERR_CHART_PROP_INVALID                     4208   // new MQL4
-#define ERR_CHART_NOT_FOUND                        4209   // new MQL4
-#define ERR_CHARTWINDOW_NOT_FOUND                  4210   // new MQL4
-#define ERR_SYMBOL_SELECT                          4211   // new MQL4
+#define ERR_CHART_PROP_INVALID                     4210   // new MQL4
+#define ERR_CHART_NOT_FOUND                        4211   // new MQL4
+#define ERR_CHARTWINDOW_NOT_FOUND                  4212   // new MQL4
+#define ERR_CHARTINDICATOR_NOT_FOUND               4213   // new MQL4
+#define ERR_SYMBOL_SELECT                          4220   // new MQL4
 #define ERR_NOTIFICATION_ERROR                     4250
 #define ERR_NOTIFICATION_PARAMETER                 4251
 #define ERR_NOTIFICATION_SETTINGS                  4252

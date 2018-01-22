@@ -31,7 +31,7 @@ void OnStart()
    int      i_unused[13];
    MqlRates rate;
 //---  
-   ExtHandle=FileOpenHistory(c_symbol+(string)i_period+".hst",FILE_BIN|FILE_WRITE|FILE_SHARE_READ|FILE_ANSI);
+   ExtHandle=FileOpenHistory(c_symbol+(string)i_period+".hst",FILE_BIN|FILE_WRITE|FILE_SHARE_WRITE|FILE_SHARE_READ|FILE_ANSI);
    if(ExtHandle<0)
       return;
    c_copyright="(C)opyright 2003, MetaQuotes Software Corp.";
