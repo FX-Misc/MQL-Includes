@@ -6,14 +6,15 @@
 #property copyright   "2005-2013, MetaQuotes Software Corp."
 #property link        "http://www.mql4.com"
 #property description "Average True Range"
+#property strict
 
-//---- indicator settings
+//--- indicator settings
 #property indicator_separate_window
 #property indicator_buffers 1
 #property indicator_color1  DodgerBlue
-//---- input parameter
+//--- input parameter
 input int InpAtrPeriod=14; // ATR Period
-//---- buffers
+//--- buffers
 double ExtATRBuffer[];
 double ExtTRBuffer[];
 //+------------------------------------------------------------------+
@@ -33,7 +34,7 @@ int OnInit(void)
    short_name="ATR("+IntegerToString(InpAtrPeriod)+")";
    IndicatorShortName(short_name);
    SetIndexLabel(0,short_name);
-//--- check for bars count and input parameter
+//--- check for input parameter
    if(InpAtrPeriod<=0)
      {
       Print("Wrong input parameter ATR Period=",InpAtrPeriod);

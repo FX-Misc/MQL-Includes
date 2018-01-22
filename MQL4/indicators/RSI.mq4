@@ -6,6 +6,7 @@
 #property copyright   "2005-2013, MetaQuotes Software Corp."
 #property link        "http://www.mql4.com"
 #property description "Relative Strength Index"
+#property strict
 
 #property indicator_separate_window
 #property indicator_minimum 0

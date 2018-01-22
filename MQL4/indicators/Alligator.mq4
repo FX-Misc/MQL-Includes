@@ -6,6 +6,8 @@
 #property copyright   "2005-2013, MetaQuotes Software Corp."
 #property link        "http://www.mql4.com"
 #property description "Bill Williams' Aligator"
+#property strict
+
 //---- indicator settings
 #property indicator_chart_window
 #property indicator_buffers 3

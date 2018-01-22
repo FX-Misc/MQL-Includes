@@ -6,6 +6,7 @@
 #property copyright   "2005-2013, MetaQuotes Software Corp."
 #property link        "http://www.mql4.com"
 #property description "Bulls Power"
+#property strict
 
 //--- indicator settings
 #property indicator_separate_window

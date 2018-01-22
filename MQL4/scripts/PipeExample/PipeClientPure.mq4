@@ -3,8 +3,11 @@
 //|                        Copyright 2013, MetaQuotes Software Corp. |
 //|                                              http://www.mql4.com |
 //+------------------------------------------------------------------+
-#property copyright "Copyright 2013, MetaQuotes Software Corp."
-#property link      "http://www.mql4.com"
+#property copyright   "Copyright 2013, MetaQuotes Software Corp."
+#property link        "http://www.mql4.com"
+#property version     "1.00"
+#property description "Pipe client sample using pure file functions"
+#property strict
 
 int ExtPipe=-1;
 //+------------------------------------------------------------------+
@@ -12,7 +15,7 @@ int ExtPipe=-1;
 //+------------------------------------------------------------------+
 void OnStart()
   {
-   string str_client="PipeClient on MQL4 build 547";
+   string str_client="PipeClient on MQL4 build "+IntegerToString(__MQL4BUILD__);
    int    size_str=StringLen(str_client);
 //--- wait for pipe server
    bool bfirst=true;

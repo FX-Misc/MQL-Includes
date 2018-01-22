@@ -6,6 +6,7 @@
 #property copyright   "2005-2013, MetaQuotes Software Corp."
 #property link        "http://www.mql4.com"
 #property description "Moving Average"
+#property strict
 
 #property indicator_chart_window
 #property indicator_buffers 1

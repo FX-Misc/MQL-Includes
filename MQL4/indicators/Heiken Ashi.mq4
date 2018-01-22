@@ -3,15 +3,12 @@
 //|                   Copyright 2005-2013, MetaQuotes Software Corp. |
 //|                                              http://www.mql4.com |
 //+------------------------------------------------------------------+
-//| For Heiken Ashi we recommend next chart settings ( press F8 or   |
-//| select on menu 'Charts'->'Properties...'):                       |
-//|  - On 'Color' Tab select 'Black' for 'Line Graph'                |
-//|  - On 'Common' Tab disable 'Chart on Foreground' checkbox and    |
-//|    select 'Line Chart' radiobutton                               |
-//+------------------------------------------------------------------+
 #property copyright   "2005-2013, MetaQuotes Software Corp."
 #property link        "http://www.mql4.com"
-#property description "Heiken Ashi"
+#property description "We recommend next chart settings (press F8 or select menu 'Charts'->'Properties...'):"
+#property description " - on 'Color' Tab select 'Black' for 'Line Graph'"
+#property description " - on 'Common' Tab disable 'Chart on Foreground' checkbox and select 'Line Chart' radiobutton"
+#property strict
 
 #property indicator_chart_window
 #property indicator_buffers 4

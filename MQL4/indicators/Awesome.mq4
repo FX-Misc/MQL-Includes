@@ -6,13 +6,15 @@
 #property copyright   "2005-2013, MetaQuotes Software Corp."
 #property link        "http://www.mql4.com"
 #property description "Awesome Oscillator"
-//---- indicator settings
+#property strict
+
+//--- indicator settings
 #property  indicator_separate_window
 #property  indicator_buffers 3
 #property  indicator_color1  Black
 #property  indicator_color2  Green
 #property  indicator_color3  Red
-//---- buffers
+//--- buffers
 double     ExtAOBuffer[];
 double     ExtUpBuffer[];
 double     ExtDnBuffer[];
@@ -26,7 +28,7 @@ double     ExtDnBuffer[];
 //+------------------------------------------------------------------+
 void OnInit(void)
   {
-//---- drawing settings
+//--- drawing settings
    SetIndexStyle(0,DRAW_NONE);
    SetIndexStyle(1,DRAW_HISTOGRAM);
    SetIndexStyle(2,DRAW_HISTOGRAM);
@@ -34,11 +36,11 @@ void OnInit(void)
    SetIndexDrawBegin(0,DATA_LIMIT);
    SetIndexDrawBegin(1,DATA_LIMIT);
    SetIndexDrawBegin(2,DATA_LIMIT);
-//---- 3 indicator buffers mapping
+//--- 3 indicator buffers mapping
    SetIndexBuffer(0,ExtAOBuffer);
    SetIndexBuffer(1,ExtUpBuffer);
    SetIndexBuffer(2,ExtDnBuffer);
-//---- name for DataWindow and indicator subwindow label
+//--- name for DataWindow and indicator subwindow label
    IndicatorShortName("AO");
    SetIndexLabel(1,NULL);
    SetIndexLabel(2,NULL);
@@ -62,17 +64,17 @@ int OnCalculate(const int rates_total,
 //--- check for rates total
    if(rates_total<=DATA_LIMIT)
       return(0);
-//---- last counted bar will be recounted
+//--- last counted bar will be recounted
    if(prev_calculated>0)
      {
       limit++;
       prev=ExtAOBuffer[limit];
      }
-//---- macd
+//--- macd
    for(i=0; i<limit; i++)
       ExtAOBuffer[i]=iMA(NULL,0,PERIOD_FAST,0,MODE_SMA,PRICE_MEDIAN,i)-
                      iMA(NULL,0,PERIOD_SLOW,0,MODE_SMA,PRICE_MEDIAN,i);
-//---- dispatch values between 2 buffers
+//--- dispatch values between 2 buffers
    bool up=true;
    for(i=limit-1; i>=0; i--)
      {
@@ -93,7 +95,7 @@ int OnCalculate(const int rates_total,
         }
       prev=current;
      }
-//---- done
+//--- done
    return(rates_total);
   }
 //+------------------------------------------------------------------+

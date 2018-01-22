@@ -3,9 +3,11 @@
 //|                        Copyright 2013, MetaQuotes Software Corp. |
 //|                                              http://www.mql4.com |
 //+------------------------------------------------------------------+
-#property copyright "Copyright 2013, MetaQuotes Software Corp."
-#property link      "http://www.mql4.com"
-#property version   "1.00"
+#property copyright   "Copyright 2013, MetaQuotes Software Corp."
+#property link        "http://www.mql4.com"
+#property version     "1.00"
+#property description "Pipe client sample using CFilePipe standard class"
+#property strict
 
 #include <Files\FilePipe.mqh>
 

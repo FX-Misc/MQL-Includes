@@ -6,6 +6,7 @@
 #property copyright   "2005-2013, MetaQuotes Software Corp."
 #property link        "http://www.mql4.com"
 #property description "Moving Averages of Oscillator"
+#property strict
 
 #include <MovingAverages.mqh>
 

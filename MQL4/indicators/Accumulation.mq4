@@ -6,11 +6,13 @@
 #property copyright   "2005-2013, MetaQuotes Software Corp."
 #property link        "http://www.mql4.com"
 #property description "Accumulation/Distribution"
-//---- indicator settings
+#property strict
+
+//--- indicator settings
 #property indicator_separate_window
 #property indicator_buffers 1
 #property indicator_color1  LightSeaGreen
-//---- buffers
+//--- buffers
 double ExtADbuffer[];
 //+------------------------------------------------------------------+
 //| Custom indicator initialization function                         |
@@ -19,7 +21,7 @@ void OnInit(void)
   {
    IndicatorShortName("A/D");
    IndicatorDigits(0);
-//---- indicators
+//--- indicators
    SetIndexStyle(0,DRAW_LINE);
    SetIndexBuffer(0,ExtADbuffer);
   }
