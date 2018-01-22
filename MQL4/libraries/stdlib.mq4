@@ -123,6 +123,9 @@ string ErrorDescription(int error_code)
       case 4205: error_string="object coordinates error";                                  break;
       case 4206: error_string="no specified subwindow";                                    break;
       case 4207: error_string="graphical object error";                                    break;
+      case 4208: error_string="unknown chart property";                                    break;
+      case 4209: error_string="chart not found";                                           break;
+      case 4210: error_string="chart subwindow not found";                                 break;
       case 4250: error_string="notification error";                                        break;
       case 4251: error_string="notification parameter error";                              break;
       case 4252: error_string="notifications disabled";                                    break;
