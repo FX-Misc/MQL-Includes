@@ -1,9 +1,9 @@
 //+------------------------------------------------------------------+
 //|                                                     Momentum.mq4 |
-//|                   Copyright 2005-2013, MetaQuotes Software Corp. |
+//|                   Copyright 2005-2014, MetaQuotes Software Corp. |
 //|                                              http://www.mql4.com |
 //+------------------------------------------------------------------+
-#property copyright   "2005-2013, MetaQuotes Software Corp."
+#property copyright   "2005-2014, MetaQuotes Software Corp."
 #property link        "http://www.mql4.com"
 #property description "Momentum"
 #property strict

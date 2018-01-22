@@ -1,20 +1,18 @@
 //+------------------------------------------------------------------+
 //|                                              DLLSampleTester.mq4 |
-//|                      Copyright © 2005, MetaQuotes Software Corp. |
+//|                 Copyright © 2005-2014, MetaQuotes Software Corp. |
 //|                                       http://www.metaquotes.net/ |
 //+------------------------------------------------------------------+
-#property copyright "Copyright © 2005, MetaQuotes Software Corp."
+#property copyright "Copyright © 2005-2014, MetaQuotes Software Corp."
 #property link      "http://www.metaquotes.net/"
 
 #import "DLLSample.dll"
 int    GetIntValue(int);
 double GetDoubleValue(double);
 string GetStringValue(string);
-double GetArrayItemValue(double arr[],int,int);
+double GetArrayItemValue(double &arr[],int,int);
 bool   SetArrayItemValue(double &arr[],int,int,double);
-double GetRatesItemValue(double rates[][6],int,int,int);
-int    SortStringArray(string &arr[],int);
-int    ProcessStringArray(string &arr[],int);
+double GetRatesItemValue(MqlRates &rates[],int,int,int);
 #import
 
 #define TIME_INDEX   0
@@ -31,9 +29,8 @@ int init()
    double ret,some_value=10.5;
    string sret;
    int    cnt;
-   string strarray[6]={ "first","second","third","fourth","fifth" };
 //--- simple dll-functions call
-   cnt=GetIntValue(some_value);
+   cnt=GetIntValue(int(some_value));
    Print("Returned value is ",cnt);
 
    ret=GetDoubleValue(some_value);
@@ -42,14 +39,6 @@ int init()
    sret=GetStringValue("some string");
    Print("Returned value is ",sret);
 //---
-   cnt=SortStringArray(strarray,ArraySize(strarray));
-   for(int i=0; i<cnt; i++)
-      Print(i," - ",strarray[i]);
-
-   cnt=ProcessStringArray(strarray,ArraySize(strarray));
-   for(i=0; i<cnt; i++)
-      Print(i," - ",strarray[i]);
-//---
    return(0);
   }
 //+------------------------------------------------------------------+
@@ -57,9 +46,9 @@ int init()
 //+------------------------------------------------------------------+
 int start()
   {
-   double price;
-   double arr[5]={1.5,2.6,3.7,4.8,5.9 };
-   double rates[][6];
+   double   price;
+   double   arr[5]={1.5,2.6,3.7,4.8,5.9 };
+   MqlRates rates[];
 //--- get first item from passed array
    price=GetArrayItemValue(arr,5,0);
    Print("Returned from arr[0] ",price);

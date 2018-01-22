@@ -207,7 +207,7 @@ bool CChartObject::Time(const int point,const datetime time) const
    if(point>=m_num_points)
       return(false);
 //--- result
-   return(ObjectSetInteger(m_chart_id,m_name,OBJPROP_TIME,time));
+   return(ObjectSetInteger(m_chart_id,m_name,OBJPROP_TIME,point,time));
   }
 //+------------------------------------------------------------------+
 //| Get the price coordinate of the specified anchor point of object.|
@@ -233,7 +233,7 @@ bool CChartObject::Price(const int point,const double price) const
    if(point>=m_num_points)
       return(false);
 //--- result
-   return(ObjectSetDouble(m_chart_id,m_name,OBJPROP_PRICE,price));
+   return(ObjectSetDouble(m_chart_id,m_name,OBJPROP_PRICE,point,price));
   }
 //+------------------------------------------------------------------+
 //| Get object color                                                 |

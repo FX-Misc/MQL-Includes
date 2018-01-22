@@ -1,9 +1,9 @@
 //+------------------------------------------------------------------+
 //|                                                     Ichimoku.mq4 |
-//|                   Copyright 2005-2013, MetaQuotes Software Corp. |
+//|                   Copyright 2005-2014, MetaQuotes Software Corp. |
 //|                                              http://www.mql4.com |
 //+------------------------------------------------------------------+
-#property copyright   "2005-2013, MetaQuotes Software Corp."
+#property copyright   "2005-2014, MetaQuotes Software Corp."
 #property link        "http://www.mql4.com"
 #property description "Ichimoku Kinko Hyo"
 #property strict
@@ -14,7 +14,7 @@
 #property indicator_color2 Blue         // Kijun-sen
 #property indicator_color3 SandyBrown   // Up Kumo
 #property indicator_color4 Thistle      // Down Kumo
-#property indicator_color5 Lime         // Chinkou Span
+#property indicator_color5 Lime         // Chikou Span
 #property indicator_color6 SandyBrown   // Up Kumo bounding line
 #property indicator_color7 Thistle      // Down Kumo bounding line
 //--- input parameters
@@ -26,7 +26,7 @@ double ExtTenkanBuffer[];
 double ExtKijunBuffer[];
 double ExtSpanA_Buffer[];
 double ExtSpanB_Buffer[];
-double ExtChinkouBuffer[];
+double ExtChikouBuffer[];
 double ExtSpanA2_Buffer[];
 double ExtSpanB2_Buffer[];
 //---
@@ -75,9 +75,9 @@ void OnInit(void)
    SetIndexLabel(6,"Senkou Span B");
 //---
    SetIndexStyle(4,DRAW_LINE);
-   SetIndexBuffer(4,ExtChinkouBuffer);
+   SetIndexBuffer(4,ExtChikouBuffer);
    SetIndexShift(4,-InpKijun);
-   SetIndexLabel(4,"Chinkou Span");
+   SetIndexLabel(4,"Chikou Span");
 //--- initialization done
   }
 //+------------------------------------------------------------------+
@@ -104,7 +104,7 @@ int OnCalculate(const int rates_total,
    ArraySetAsSeries(ExtKijunBuffer,false);
    ArraySetAsSeries(ExtSpanA_Buffer,false);
    ArraySetAsSeries(ExtSpanB_Buffer,false);
-   ArraySetAsSeries(ExtChinkouBuffer,false);
+   ArraySetAsSeries(ExtChikouBuffer,false);
    ArraySetAsSeries(ExtSpanA2_Buffer,false);
    ArraySetAsSeries(ExtSpanB2_Buffer,false);
    ArraySetAsSeries(open,false);
@@ -196,12 +196,12 @@ int OnCalculate(const int rates_total,
       ExtSpanB_Buffer[i]=(high_value+low_value)/2;
       ExtSpanB2_Buffer[i]=ExtSpanB_Buffer[i];
      }
-//--- Chinkou Span
+//--- Chikou Span
    pos=0;
    if(prev_calculated>1)
       pos=prev_calculated-1;
    for(i=pos; i<rates_total; i++)
-      ExtChinkouBuffer[i]=close[i];
+      ExtChikouBuffer[i]=close[i];
 //---
    return(rates_total);
   }

@@ -1,9 +1,9 @@
 //+------------------------------------------------------------------+
 //|                                                  SimplePanel.mq4 |
-//|                   Copyright 2009-2013, MetaQuotes Software Corp. |
+//|                   Copyright 2009-2014, MetaQuotes Software Corp. |
 //|                                              http://www.mql4.com |
 //+------------------------------------------------------------------+
-#property copyright "Copyright 2009-2013, MetaQuotes Software Corp."
+#property copyright "Copyright 2009-2014, MetaQuotes Software Corp."
 #property link      "http://www.mql4.com"
 #property version   "1.00"
 #property strict

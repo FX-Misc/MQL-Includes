@@ -1,6 +1,6 @@
 //+------------------------------------------------------------------+
 //|                                                  PanelDialog.mqh |
-//|                   Copyright 2009-2013, MetaQuotes Software Corp. |
+//|                   Copyright 2009-2014, MetaQuotes Software Corp. |
 //|                                              http://www.mql5.com |
 //+------------------------------------------------------------------+
 #include <Controls\Dialog.mqh>
@@ -96,7 +96,6 @@ CPanelDialog::~CPanelDialog(void)
 //+------------------------------------------------------------------+
 bool CPanelDialog::Create(const long chart,const string name,const int subwin,const int x1,const int y1,const int x2,const int y2)
   {
-   Print("Create  x1=",x1," y1=",y1," x2=",x2," y2=",y2);
    if(!CAppDialog::Create(chart,name,subwin,x1,y1,x2,y2))
       return(false);
 //--- create dependent controls

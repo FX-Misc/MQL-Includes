@@ -4,6 +4,7 @@
 //|                                        http://www.metaquotes.net |
 //+------------------------------------------------------------------+
 #define WIN32_LEAN_AND_MEAN  // Exclude rarely-used stuff from Windows headers
+#include "stdafx.h"
 #include <windows.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -15,12 +16,14 @@
 #pragma pack(push,1)
 struct RateInfo
   {
-   unsigned int      ctm;
+   __int64           ctm;
    double            open;
    double            low;
    double            high;
    double            close;
-   double            vol;
+   unsigned __int64  vol_tick;
+   int               spread;
+   unsigned __int64  vol_real;
   };
 #pragma pack(pop)
 //---
@@ -66,9 +69,9 @@ MT4_EXPFUNC double __stdcall GetDoubleValue(const double dpar)
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-MT4_EXPFUNC char* __stdcall GetStringValue(char *spar)
+MT4_EXPFUNC wchar_t* __stdcall GetStringValue(wchar_t *spar)
   {
-   printf("GetDoubleValue takes \"%s\"\n",spar);
+   wprintf(L"GetStringValue takes \"%s\"\n",spar);
    return(spar);
   }
 //+------------------------------------------------------------------+
@@ -98,7 +101,7 @@ MT4_EXPFUNC double __stdcall GetArrayItemValue(const double *arr,const int array
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-MT4_EXPFUNC BOOL __stdcall SetArrayItemValue(double *arr,const int arraysize,const int nitem,const double value)
+MT4_EXPFUNC bool _stdcall SetArrayItemValue(double *arr,const int arraysize,const int nitem,const double value)
   {
 //---
    if(arr==NULL)
@@ -158,7 +161,7 @@ MT4_EXPFUNC double __stdcall GetRatesItemValue(const RateInfo* rates,const int r
       case 2: return rates[nitem].low;
       case 3: return rates[nitem].high;
       case 4: return rates[nitem].close;
-      case 5: return rates[nitem].vol;
+      case 5: return double(rates[nitem].vol_tick);
      }
 //---
    return(0.0);
