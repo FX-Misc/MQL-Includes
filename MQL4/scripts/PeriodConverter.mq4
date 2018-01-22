@@ -1,11 +1,11 @@
 //+------------------------------------------------------------------+
 //|                                              PeriodConverter.mq4 |
-//|                   Copyright 2005-2013, MetaQuotes Software Corp. |
+//|                   Copyright 2006-2014, MetaQuotes Software Corp. |
 //|                                        http://www.metaquotes.net |
 //+------------------------------------------------------------------+
-#property copyright   "2005-2013, MetaQuotes Software Corp."
+#property copyright   "2006-2014, MetaQuotes Software Corp."
 #property link        "http://www.mql4.com"
-#property description "Period Convereter to updated format of history base"
+#property description "Period Converter to updated format of history base"
 #property strict
 #property show_inputs
 #include <WinUser32.mqh>
