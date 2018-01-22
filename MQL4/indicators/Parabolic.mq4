@@ -12,7 +12,7 @@
 #property indicator_chart_window
 #property indicator_buffers 1
 #property indicator_color1  Lime
-//--- External parametrs
+//--- input parameters
 input double InpSARStep=0.02;    // Step
 input double InpSARMaximum=0.2;  // Maximum
 //---- buffers
@@ -33,16 +33,16 @@ void OnInit()
    if(InpSARStep<0.0)
      {
       ExtSarStep=0.02;
-      Print("Input parametr InpSARStep has incorrect value. Indicator will use value",
-            ExtSarStep,"for calculations.");
+      Print("Input parametr InpSARStep has incorrect value. Indicator will use value ",
+            ExtSarStep," for calculations.");
      }
    else
       ExtSarStep=InpSARStep;
    if(InpSARMaximum<0.0)
      {
       ExtSarMaximum=0.2;
-      Print("Input parametr InpSARMaximum has incorrect value. Indicator will use value",
-            ExtSarMaximum,"for calculations.");
+      Print("Input parametr InpSARMaximum has incorrect value. Indicator will use value ",
+            ExtSarMaximum," for calculations.");
      }
    else
       ExtSarMaximum=InpSARMaximum;
