@@ -1,181 +1,239 @@
 //+------------------------------------------------------------------+
 //|                                                    Parabolic.mq4 |
-//|                      Copyright © 2004, MetaQuotes Software Corp. |
-//|                                       http://www.metaquotes.net/ |
+//|                   Copyright 2005-2013, MetaQuotes Software Corp. |
+//|                                              http://www.mql4.com |
 //+------------------------------------------------------------------+
-#property copyright "Copyright © 2004, MetaQuotes Software Corp."
-#property link      "http://www.metaquotes.net/"
+#property copyright   "2005-2013, MetaQuotes Software Corp."
+#property link        "http://www.mql4.com"
+#property description "Parabolic Stop-And-Reversal system"
+#property strict
 
+//--- indicator settings
 #property indicator_chart_window
 #property indicator_buffers 1
-#property indicator_color1 Lime
-//--- input parameters
-extern double    Step=0.02;
-extern double    Maximum=0.2;
-//--- buffers
-double SarBuffer[];
-//---
-int    save_lastreverse;
-bool   save_dirlong;
-double save_start;
-double save_last_high;
-double save_last_low;
-double save_ep;
-double save_sar;
+#property indicator_color1  Lime
+//--- External parametrs
+input double InpSARStep=0.02;    // Step
+input double InpSARMaximum=0.2;  // Maximum
+//---- buffers
+double       ExtSARBuffer[];
+//--- global variables
+double       ExtSarStep;
+double       ExtSarMaximum;
+int          ExtLastReverse;
+bool         ExtDirectionLong;
+double       ExtLastStep,ExtLastEP,ExtLastSAR;
+double       ExtLastHigh,ExtLastLow;
 //+------------------------------------------------------------------+
 //| Custom indicator initialization function                         |
 //+------------------------------------------------------------------+
-int OnInit(void)
+void OnInit()
   {
-//--- indicators
+//--- checking input data
+   if(InpSARStep<0.0)
+     {
+      ExtSarStep=0.02;
+      Print("Input parametr InpSARStep has incorrect value. Indicator will use value",
+            ExtSarStep,"for calculations.");
+     }
+   else
+      ExtSarStep=InpSARStep;
+   if(InpSARMaximum<0.0)
+     {
+      ExtSarMaximum=0.2;
+      Print("Input parametr InpSARMaximum has incorrect value. Indicator will use value",
+            ExtSarMaximum,"for calculations.");
+     }
+   else
+      ExtSarMaximum=InpSARMaximum;
+//--- drawing settings
+   IndicatorDigits(Digits);
    SetIndexStyle(0,DRAW_ARROW);
    SetIndexArrow(0,159);
-   SetIndexBuffer(0,SarBuffer);
-//--- initialization done
-   return(INIT_SUCCEEDED);
+//---- indicator buffers
+   SetIndexBuffer(0,ExtSARBuffer);
+//--- set short name
+   IndicatorShortName("SAR("+DoubleToString(ExtSarStep,2)+","+DoubleToString(ExtSarMaximum,2)+")");
+//--- set global variables
+   ExtLastReverse=0;
+   ExtDirectionLong=false;
+   ExtLastStep=ExtLastEP=ExtLastSAR=0.0;
+   ExtLastHigh=ExtLastLow=0.0;
+//----
   }
 //+------------------------------------------------------------------+
-//|                                                                  |
+//| Parabolic SAR                                                    |
 //+------------------------------------------------------------------+
-void SaveLastReverse(int last,int dir,double start,double low,double high,double ep,double sar)
+int OnCalculate(const int rates_total,
+                const int prev_calculated,
+                const datetime &time[],
+                const double &open[],
+                const double &high[],
+                const double &low[],
+                const double &close[],
+                const long& tick_volume[],
+                const long& volume[],
+                const int& spread[])
   {
-   save_lastreverse=last;
-   save_dirlong=dir;
-   save_start=start;
-   save_last_low=low;
-   save_last_high=high;
-   save_ep=ep;
-   save_sar=sar;
-  }
-//+------------------------------------------------------------------+
-//| Parabolic Sell And Reverse system                                |
-//+------------------------------------------------------------------+
-int start()
-  {
-   static bool first=true;
-   bool   dirlong;
-   double start,last_high,last_low;
-   double ep,sar,price_low,price_high,price;
-   int    i,counted_bars=IndicatorCounted();
-//---
-   if(Bars<3) return(0);
-//--- initial settings
-   i=Bars-2;
-   if(counted_bars==0 || first)
+   bool   dir_long;
+   double last_high,last_low,ep,sar,step;
+   int    i;
+//--- check for minimum rates count
+   if(rates_total<3)
+      return(0);
+//--- counting from 0 to rates_total
+   ArraySetAsSeries(ExtSARBuffer,false);
+   ArraySetAsSeries(high,false);
+   ArraySetAsSeries(low,false);
+//--- detect current position for calculations 
+   i=prev_calculated-1;
+//--- calculations from start?
+   if(i<1)
      {
-      first=false;
-      dirlong=true;
-      start=Step;
+      ExtLastReverse=0;
+      dir_long=true;
+      step=ExtSarStep;
       last_high=-10000000.0;
       last_low=10000000.0;
-      while(i>0)
+      sar=0;
+      i=1;
+      while(i<rates_total-1)
         {
-         save_lastreverse=i;
-         price_low=Low[i];
-         if(last_low>price_low)   last_low=price_low;
-         price_high=High[i];
-         if(last_high<price_high) last_high=price_high;
-         if(price_high>High[i+1] && price_low>Low[i+1]) break;
-         if(price_high<High[i+1] && price_low<Low[i+1]) { dirlong=false; break; }
-         i--;
-        }
-      //--- initial zero
-      int k=i;
-      while(k<Bars)
-        {
-         SarBuffer[k]=0.0;
-         k++;
-        }
-      //--- check further
-      if(dirlong) { SarBuffer[i]=Low[i+1]; ep=High[i]; }
-      else        { SarBuffer[i]=High[i+1]; ep=Low[i]; }
-      i--;
-     }
-    else
-     {
-      i=save_lastreverse;
-      start=save_start;
-      dirlong=save_dirlong;
-      last_high=save_last_high;
-      last_low=save_last_low;
-      ep=save_ep;
-      sar=save_sar;
-     }
-//---
-   while(i>=0)
-     {
-      price_low=Low[i];
-      price_high=High[i];
-      //--- check for reverse
-      if(dirlong && price_low<SarBuffer[i+1])
-        {
-         SaveLastReverse(i,true,start,price_low,last_high,ep,sar);
-         start=Step; dirlong=false;
-         ep=price_low;  last_low=price_low;
-         SarBuffer[i]=last_high;
-         i--;
-         continue;
-        }
-      if(!dirlong && price_high>SarBuffer[i+1])
-        {
-         SaveLastReverse(i,false,start,last_low,price_high,ep,sar);
-         start=Step; dirlong=true;
-         ep=price_high; last_high=price_high;
-         SarBuffer[i]=last_low;
-         i--;
-         continue;
-        }
-      //---
-      price=SarBuffer[i+1];
-      sar=price+start*(ep-price);
-      if(dirlong)
-        {
-         if(ep<price_high && (start+Step)<=Maximum) start+=Step;
-         if(price_high<High[i+1] && i==Bars-2)  sar=SarBuffer[i+1];
-
-         price=Low[i+1];
-         if(sar>price) sar=price;
-         price=Low[i+2];
-         if(sar>price) sar=price;
-         if(sar>price_low)
+         ExtLastReverse=i;
+         if(last_low>low[i])
+            last_low=low[i];
+         if(last_high<high[i])
+            last_high=high[i];
+         if(high[i]>high[i-1] && low[i]>low[i-1])
+            break;
+         if(high[i]<high[i-1] && low[i]<low[i-1])
            {
-            SaveLastReverse(i,true,start,price_low,last_high,ep,sar);
-            start=Step; dirlong=false; ep=price_low;
-            last_low=price_low;
-            SarBuffer[i]=last_high;
-            i--;
-            continue;
+            dir_long=false;
+            break;
            }
-         if(ep<price_high) { last_high=price_high; ep=price_high; }
+         i++;
+        }
+      //--- initialize with zero
+      ArrayInitialize(ExtSARBuffer,0.0);
+      //--- go check
+      if(dir_long)
+        {
+         ExtSARBuffer[i]=low[i-1];
+         ep=high[i];
         }
       else
         {
-         if(ep>price_low && (start+Step)<=Maximum) start+=Step;
-         if(price_low<Low[i+1] && i==Bars-2)  sar=SarBuffer[i+1];
-
-         price=High[i+1];
-         if(sar<price) sar=price;
-         price=High[i+2];
-         if(sar<price) sar=price;
-         if(sar<price_high)
+         ExtSARBuffer[i]=high[i-1];
+         ep=low[i];
+        }
+      i++;
+     }
+   else
+     {
+      //--- calculations to be continued. restore last values
+      i=ExtLastReverse;
+      step=ExtLastStep;
+      dir_long=ExtDirectionLong;
+      last_high=ExtLastHigh;
+      last_low=ExtLastLow;
+      ep=ExtLastEP;
+      sar=ExtLastSAR;
+     }
+//---main cycle
+   while(i<rates_total)
+     {
+      //--- check for reverse
+      if(dir_long && low[i]<ExtSARBuffer[i-1])
+        {
+         SaveLastReverse(i,true,step,low[i],last_high,ep,sar);
+         step=ExtSarStep;
+         dir_long=false;
+         ep=low[i];
+         last_low=low[i];
+         ExtSARBuffer[i++]=last_high;
+         continue;
+        }
+      if(!dir_long && high[i]>ExtSARBuffer[i-1])
+        {
+         SaveLastReverse(i,false,step,last_low,high[i],ep,sar);
+         step=ExtSarStep;
+         dir_long=true;
+         ep=high[i];
+         last_high=high[i];
+         ExtSARBuffer[i++]=last_low;
+         continue;
+        }
+      //---
+      sar=ExtSARBuffer[i-1]+step*(ep-ExtSARBuffer[i-1]);
+      //--- LONG?
+      if(dir_long)
+        {
+         if(ep<high[i])
            {
-            SaveLastReverse(i,false,start,last_low,price_high,ep,sar);
-            start=Step; dirlong=true; ep=price_high;
-            last_high=price_high;
-            SarBuffer[i]=last_low;
-            i--;
+            if((step+ExtSarStep)<=ExtSarMaximum)
+               step+=ExtSarStep;
+           }
+         if(high[i]<high[i-1] && i==2)
+            sar=ExtSARBuffer[i-1];
+         if(sar>low[i-1])
+            sar=low[i-1];
+         if(sar>low[i-2])
+            sar=low[i-2];
+         if(sar>low[i])
+           {
+            SaveLastReverse(i,true,step,low[i],last_high,ep,sar);
+            step=ExtSarStep; dir_long=false; ep=low[i];
+            last_low=low[i];
+            ExtSARBuffer[i++]=last_high;
             continue;
            }
-         if(ep>price_low) { last_low=price_low; ep=price_low; }
+         if(ep<high[i])
+            ep=last_high=high[i];
         }
-      SarBuffer[i]=sar;
-      i--;
+      else // SHORT
+        {
+         if(ep>low[i])
+           {
+            if((step+ExtSarStep)<=ExtSarMaximum)
+               step+=ExtSarStep;
+           }
+         if(low[i]<low[i-1] && i==2)
+            sar=ExtSARBuffer[i-1];
+         if(sar<high[i-1])
+            sar=high[i-1];
+         if(sar<high[i-2])
+            sar=high[i-2];
+         if(sar<high[i])
+           {
+            SaveLastReverse(i,false,step,last_low,high[i],ep,sar);
+            step=ExtSarStep;
+            dir_long=true;
+            ep=high[i];
+            last_high=high[i];
+            ExtSARBuffer[i++]=last_low;
+            continue;
+           }
+         if(ep>low[i])
+            ep=last_low=low[i];
+        }
+      ExtSARBuffer[i++]=sar;
      }
-//   sar=SarBuffer[0];
-//   price=iSAR(NULL,0,Step,Maximum,0);
-//   if(sar!=price) Print("custom=",sar,"   SAR=",price,"   counted=",counted_bars);
-//   if(sar==price) Print("custom=",sar,"   SAR=",price,"   counted=",counted_bars);
-//---
-   return(0);
+//---- OnCalculate done. Return new prev_calculated.
+   return(rates_total);
+  }
+//+------------------------------------------------------------------+
+//|  save last values to continue further calculations               |
+//+------------------------------------------------------------------+
+void SaveLastReverse(int reverse,bool dir,double step,double last_low,double last_high,double ep,double sar)
+  {
+   ExtLastReverse=reverse;
+   if(ExtLastReverse<2)
+      ExtLastReverse=2;
+   ExtDirectionLong=dir;
+   ExtLastStep=step;
+   ExtLastLow=last_low;
+   ExtLastHigh=last_high;
+   ExtLastEP=ep;
+   ExtLastSAR=sar;
   }
 //+------------------------------------------------------------------+
